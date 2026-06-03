@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { naam, datum, werfadres, aanwezigen } = body;
+    const { naam, verslaggever, datum, werfadres, aanwezigen } = body;
 
-    if (!naam || !datum || !werfadres) {
+    if (!naam || !verslaggever || !datum || !werfadres) {
       return NextResponse.json(
-        { error: "Naam, datum en werfadres zijn verplicht" },
+        { error: "Naam, verslaggever, datum en werfadres zijn verplicht" },
         { status: 400 }
       );
     }
@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
     const verslag = await prisma.werfverslag.create({
       data: {
         naam,
+        verslaggever,
         datum: new Date(datum),
         werfadres,
         aanwezigen: {
