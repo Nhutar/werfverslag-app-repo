@@ -6,10 +6,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://fake:fake@localhost:5432/fake
+      DIRECT_URL: postgresql://fake:fake@localhost:5432/fake
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
       - run: npm ci
+      - run: npx prisma generate
       - run: npm run build
