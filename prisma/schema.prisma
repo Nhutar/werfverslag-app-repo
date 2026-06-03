@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Werfverslag {
+  id           String    @id @default(uuid())
+  naam         String
+  datum        DateTime  @db.Date
+  aangemaaktOp DateTime  @default(now()) @map("aangemaakt_op")
+  nokPunten    NokPunt[]
+
+  @@map("werfverslag")
+}
+
+model NokPunt {
+  id                     String           @id @default(uuid())
+  werfverslagId          String           @map("werfverslag_id")
+  werfverslag            Werfverslag      @relation(fields: [werfverslagId], references: [id])
+  discipline             String
+  omschrijving           String
+  fotoUrl                String?          @map("foto_url")
+  verantwoordelijkeNaam  String           @map("verantwoordelijke_naam")
+  verantwoordelijkeEmail String           @map("verantwoordelijke_email")
+  deadline               DateTime         @db.Date
+  status                 String           @default("open")
+  opgelostDoorNaam       String?          @map("opgelost_door_naam")
+  opgelostOp             DateTime?        @map("opgelost_op")
+  aangemaaktOp           DateTime         @default(now()) @map("aangemaakt_op")
+  magicLinkTokens        MagicLinkToken[]
+
+  @@map("nok_punt")
+}
+
+model MagicLinkToken {
+  id           String   @id @default(uuid())
+  nokPuntId    String   @map("nok_punt_id")
+  nokPunt      NokPunt  @relation(fields: [nokPuntId], references: [id])
+  token        String   @unique
+  vervalOp     DateTime @map("vervalt_op")
+  aangemaaktOp DateTime @default(now()) @map("aangemaakt_op")
+
+  @@map("magic_link_token")
+}
