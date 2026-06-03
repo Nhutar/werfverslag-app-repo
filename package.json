@@ -1,6 +1,6 @@
 {
   "name": "nextjs-temp2",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,9 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@supabase/supabase-js": "^2.107.0",
+    "@types/pg": "^8.20.0",
     "next": "14.2.35",
+    "pg": "^8.21.0",
     "prisma": "^7.8.0",
     "react": "^18",
     "react-dom": "^18"

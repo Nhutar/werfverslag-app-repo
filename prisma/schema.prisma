@@ -7,30 +7,45 @@ datasource db {
 }
 
 model Werfverslag {
-  id           String    @id @default(uuid())
+  id           String      @id @default(uuid())
   naam         String
-  datum        DateTime  @db.Date
-  aangemaaktOp DateTime  @default(now()) @map("aangemaakt_op")
+  datum        DateTime    @db.Date
+  werfadres    String
+  aangemaaktOp DateTime    @default(now()) @map("aangemaakt_op")
   nokPunten    NokPunt[]
+  aanwezigen   Aanwezige[]
 
   @@map("werfverslag")
 }
 
+model Aanwezige {
+  id            String      @id @default(uuid())
+  werfverslagId String      @map("werfverslag_id")
+  werfverslag   Werfverslag @relation(fields: [werfverslagId], references: [id])
+  discipline    String
+  naam          String
+  email         String
+
+  @@map("aanwezige")
+}
+
 model NokPunt {
-  id                     String           @id @default(uuid())
-  werfverslagId          String           @map("werfverslag_id")
-  werfverslag            Werfverslag      @relation(fields: [werfverslagId], references: [id])
-  discipline             String
-  omschrijving           String
-  fotoUrl                String?          @map("foto_url")
-  verantwoordelijkeNaam  String           @map("verantwoordelijke_naam")
-  verantwoordelijkeEmail String           @map("verantwoordelijke_email")
-  deadline               DateTime         @db.Date
-  status                 String           @default("open")
-  opgelostDoorNaam       String?          @map("opgelost_door_naam")
-  opgelostOp             DateTime?        @map("opgelost_op")
-  aangemaaktOp           DateTime         @default(now()) @map("aangemaakt_op")
-  magicLinkTokens        MagicLinkToken[]
+  id                      String           @id @default(uuid())
+  werfverslagId           String           @map("werfverslag_id")
+  werfverslag             Werfverslag      @relation(fields: [werfverslagId], references: [id])
+  discipline              String
+  omschrijving            String
+  fotoUrl                 String?          @map("foto_url")
+  verantwoordelijkeNaam   String           @map("verantwoordelijke_naam")
+  verantwoordelijkeEmail  String           @map("verantwoordelijke_email")
+  deadline                DateTime         @db.Date
+  status                  String           @default("open")
+  opgelostDoorNaam        String?          @map("opgelost_door_naam")
+  opgelostOp              DateTime?        @map("opgelost_op")
+  oplossingOmschrijving   String?          @map("oplossing_omschrijving")
+  oplossingFotoUrl        String?          @map("oplossing_foto_url")
+  aangemaaktOp            DateTime         @default(now()) @map("aangemaakt_op")
+  magicLinkTokens         MagicLinkToken[]
 
   @@map("nok_punt")
 }
