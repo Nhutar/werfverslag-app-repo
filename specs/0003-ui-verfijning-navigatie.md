@@ -4,7 +4,7 @@ id: "0003"
 slug: ui-verfijning-navigatie
 title: "UI-verfijning: navigatie, verslaggever en lijstgedrag"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-03
 ---
 
