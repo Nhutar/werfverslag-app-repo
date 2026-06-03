@@ -5,6 +5,20 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-03
+
+### Added
+- Spec 0003: Verslaggever-veld (naam) toegevoegd aan verslag, getoond op detailpagina
+- Opgeloste NOK-punten in aparte inklapbare sectie "Opgelost (X)" onderaan
+- Tweede "+ NOK-punt toevoegen" knop onderaan het kader
+
+### Changed
+- Aanwezigen verschijnen nu bovenaan de lijst (knop blijft bereikbaar)
+- Verslagdetails sticky bovenaan op desktop, compact op mobiel
+- Terug-navigatie benoemt het doeltype: "Terug naar werfverslagen" / "Terug naar project"
+- NOK-punt pagina: werfnaam als titel, "NOK-punt toevoegen" als subtitel
+- NOK-punten lijst toont nieuwste onderaan (volgorde van toevoegen)
+
 ## [0.2.0] — 2026-06-03
 
 ### Added

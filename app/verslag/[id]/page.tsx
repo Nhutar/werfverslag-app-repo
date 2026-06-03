@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { berekenStatus } from "@/lib/status";
-import { StatusBadge } from "@/components/StatusBadge";
+import { NokPuntenLijst, NokPuntData } from "@/components/NokPuntenLijst";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +26,17 @@ export default async function VerslagDetailPagina({
     year: "numeric",
   });
 
-  // Sorteer: open punten eerst (voorbij-deadline → bijna-deadline → open → opgelost)
-  const volgorde = ["voorbij-deadline", "bijna-deadline", "open", "opgelost"];
-  const gesorteerdeNokPunten = [...verslag.nokPunten].sort((a, b) => {
-    const statusA = berekenStatus(a.deadline, a.status);
-    const statusB = berekenStatus(b.deadline, b.status);
-    return volgorde.indexOf(statusA) - volgorde.indexOf(statusB);
-  });
+  // Punten omzetten naar serialiseerbare data voor het client component
+  const puntenData: NokPuntData[] = verslag.nokPunten.map((p) => ({
+    id: p.id,
+    discipline: p.discipline,
+    omschrijving: p.omschrijving,
+    verantwoordelijkeNaam: p.verantwoordelijkeNaam,
+    deadline: p.deadline.toISOString(),
+    status: p.status,
+    opgelostOp: p.opgelostOp ? p.opgelostOp.toISOString() : null,
+    opgelostDoorNaam: p.opgelostDoorNaam,
+  }));
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
@@ -42,15 +45,42 @@ export default async function VerslagDetailPagina({
         href="/"
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
       >
-        ← Terug
+        ← Terug naar werfverslagen
       </Link>
 
-      {/* Verslag info */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+      {/* Verslag info — sticky bovenaan */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6 md:sticky md:top-4 z-10">
         <h1 className="text-xl font-bold text-gray-900">{verslag.naam}</h1>
-        <p className="text-sm text-gray-500 mt-1">{datum}</p>
-        <p className="text-sm text-gray-400 mt-0.5">{verslag.werfadres}</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Verslaggever: {verslag.verslaggever}
+        </p>
+        {/* Op mobiel verbergen we de extra details om de sticky kop compact te houden */}
+        <div className="hidden md:block">
+          <p className="text-sm text-gray-500 mt-1">{datum}</p>
+          <p className="text-sm text-gray-400 mt-0.5">{verslag.werfadres}</p>
 
+          {verslag.aanwezigen.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs font-medium text-gray-500 mb-1">
+                Aanwezigen
+              </p>
+              <div className="flex flex-col gap-1">
+                {verslag.aanwezigen.map((a) => (
+                  <p key={a.id} className="text-sm text-gray-600">
+                    <span className="font-medium">{a.naam}</span>{" "}
+                    <span className="text-gray-400">— {a.discipline}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Op mobiel tonen we datum/adres/aanwezigen apart (niet sticky) */}
+      <div className="md:hidden bg-white rounded-xl border border-gray-200 p-5 mb-6">
+        <p className="text-sm text-gray-500">{datum}</p>
+        <p className="text-sm text-gray-400 mt-0.5">{verslag.werfadres}</p>
         {verslag.aanwezigen.length > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <p className="text-xs font-medium text-gray-500 mb-1">Aanwezigen</p>
@@ -83,7 +113,7 @@ export default async function VerslagDetailPagina({
       </div>
 
       {/* NOK-punten lijst */}
-      {gesorteerdeNokPunten.length === 0 ? (
+      {verslag.nokPunten.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <p className="text-3xl mb-3">✅</p>
           <p className="text-gray-600 font-medium">Geen NOK-punten</p>
@@ -92,51 +122,18 @@ export default async function VerslagDetailPagina({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {gesorteerdeNokPunten.map((punt) => {
-            const status = berekenStatus(punt.deadline, punt.status);
-            const deadline = new Date(punt.deadline).toLocaleDateString(
-              "nl-BE",
-              { day: "numeric", month: "short", year: "numeric" }
-            );
-
-            return (
-              <div
-                key={punt.id}
-                className="bg-white rounded-xl border border-gray-200 p-4"
-              >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <StatusBadge status={status} />
-                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                      {punt.discipline}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm font-medium text-gray-800 mb-2">
-                  {punt.omschrijving}
-                </p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                  <span>
-                    <span className="font-medium">Verantwoordelijke:</span>{" "}
-                    {punt.verantwoordelijkeNaam}
-                  </span>
-                  <span>
-                    <span className="font-medium">Deadline:</span> {deadline}
-                  </span>
-                </div>
-                {punt.status === "opgelost" && punt.opgelostOp && (
-                  <p className="text-xs text-green-600 mt-2">
-                    Opgelost op{" "}
-                    {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}
-                    {punt.opgelostDoorNaam && ` door ${punt.opgelostDoorNaam}`}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <NokPuntenLijst punten={puntenData} />
       )}
+
+      {/* Tweede + NOK-punt knop onderaan */}
+      <div className="mt-6">
+        <Link
+          href={`/verslag/${verslag.id}/nieuw-punt`}
+          className="flex items-center justify-center gap-1 w-full bg-white border border-blue-200 text-blue-600 px-4 py-3 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
+        >
+          + NOK-punt toevoegen
+        </Link>
+      </div>
     </div>
   );
 }

@@ -28,12 +28,11 @@ export default async function NieuwNokPuntPagina({
         href={`/verslag/${params.id}`}
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
       >
-        ← Terug naar {verslag.naam}
+        ← Terug naar project
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
-        NOK-punt toevoegen
-      </h1>
+      <h1 className="text-2xl font-bold text-gray-900">{verslag.naam}</h1>
+      <p className="text-sm text-gray-500 mb-6">NOK-punt toevoegen</p>
 
       {/* Placeholder melding */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">

@@ -16,6 +16,7 @@ export default function NieuwVerslagPagina() {
   const vandaag = new Date().toISOString().split("T")[0];
 
   const [naam, setNaam] = useState("");
+  const [verslaggever, setVerslaggever] = useState("");
   const [datum, setDatum] = useState(vandaag);
   const [werfadres, setWerfadres] = useState("");
   const [aanwezigen, setAanwezigen] = useState<Aanwezige[]>([]);
@@ -23,14 +24,22 @@ export default function NieuwVerslagPagina() {
   const [fout, setFout] = useState("");
 
   function voegAanwezigeToe() {
-    setAanwezigen([...aanwezigen, { discipline: DISCIPLINES[0], naam: "", email: "" }]);
+    // Nieuwe aanwezige bovenaan toevoegen, zodat de knop altijd bereikbaar blijft
+    setAanwezigen([
+      { discipline: DISCIPLINES[0], naam: "", email: "" },
+      ...aanwezigen,
+    ]);
   }
 
   function verwijderAanwezige(index: number) {
     setAanwezigen(aanwezigen.filter((_, i) => i !== index));
   }
 
-  function updateAanwezige(index: number, veld: keyof Aanwezige, waarde: string) {
+  function updateAanwezige(
+    index: number,
+    veld: keyof Aanwezige,
+    waarde: string
+  ) {
     setAanwezigen(
       aanwezigen.map((a, i) => (i === index ? { ...a, [veld]: waarde } : a))
     );
@@ -40,8 +49,8 @@ export default function NieuwVerslagPagina() {
     e.preventDefault();
     setFout("");
 
-    if (!naam.trim() || !werfadres.trim()) {
-      setFout("Naam en werfadres zijn verplicht.");
+    if (!naam.trim() || !verslaggever.trim() || !werfadres.trim()) {
+      setFout("Naam werf, verslaggever en werfadres zijn verplicht.");
       return;
     }
 
@@ -57,7 +66,7 @@ export default function NieuwVerslagPagina() {
       const res = await fetch("/api/verslagen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ naam, datum, werfadres, aanwezigen }),
+        body: JSON.stringify({ naam, verslaggever, datum, werfadres, aanwezigen }),
       });
 
       if (!res.ok) throw new Error("Fout bij opslaan");
@@ -76,14 +85,14 @@ export default function NieuwVerslagPagina() {
         href="/"
         className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-6"
       >
-        ← Terug
+        ← Terug naar werfverslagen
       </Link>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Nieuw verslag</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        {/* Naam werf */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4">
+        {/* Verslag details — sticky bovenaan */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4 md:sticky md:top-4 z-10">
           <h2 className="font-semibold text-gray-800">Verslag details</h2>
 
           <div>
@@ -95,6 +104,19 @@ export default function NieuwVerslagPagina() {
               value={naam}
               onChange={(e) => setNaam(e.target.value)}
               placeholder="bv. Residentie De Linde"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Verslaggever <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={verslaggever}
+              onChange={(e) => setVerslaggever(e.target.value)}
+              placeholder="Jouw naam"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -145,10 +167,13 @@ export default function NieuwVerslagPagina() {
           )}
 
           {aanwezigen.map((a, i) => (
-            <div key={i} className="flex flex-col gap-2 border border-gray-100 rounded-lg p-3 bg-gray-50">
+            <div
+              key={i}
+              className="flex flex-col gap-2 border border-gray-100 rounded-lg p-3 bg-gray-50"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-gray-500">
-                  Aanwezige {i + 1}
+                  Aanwezige {aanwezigen.length - i}
                 </span>
                 <button
                   type="button"
@@ -161,7 +186,9 @@ export default function NieuwVerslagPagina() {
 
               <select
                 value={a.discipline}
-                onChange={(e) => updateAanwezige(i, "discipline", e.target.value)}
+                onChange={(e) =>
+                  updateAanwezige(i, "discipline", e.target.value)
+                }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {DISCIPLINES.map((d) => (

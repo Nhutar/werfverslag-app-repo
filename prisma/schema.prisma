@@ -9,6 +9,7 @@ datasource db {
 model Werfverslag {
   id           String      @id @default(uuid())
   naam         String
+  verslaggever String
   datum        DateTime    @db.Date
   werfadres    String
   aangemaaktOp DateTime    @default(now()) @map("aangemaakt_op")
