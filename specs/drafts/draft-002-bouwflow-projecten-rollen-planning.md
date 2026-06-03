@@ -23,6 +23,14 @@ De magic link pagina voor de verantwoordelijke is een **dynamisch onderdeel van 
 
 Per NOK-punt kunnen **meerdere foto's** worden toegevoegd.
 
+### Omkering aanwezigen/verantwoordelijken (vs. prototype)
+
+In het prototype kiezen we de verantwoordelijke van een NOK-punt uit de lijst van aanwezigen.
+In de volledige app draait dit om:
+- **Verantwoordelijken** worden vooraf ingegeven in het projectdashboard (zoals we nu aanwezigen ingeven bij een verslag).
+- **Aanwezigen** worden bij een rondgang aangevinkt vanuit die verantwoordelijkenlijst (zoals we nu de verantwoordelijke kiezen op een NOK-punt).
+- Een verantwoordelijke hoeft dus niet aanwezig te zijn op de rondgang.
+
 ### Schermen die hierbij horen
 - **Overkoepelend dashboard** — overzicht van alle projecten
 - **Projectdashboard** — verslagen, NOK-punten, aanwezigen, Gantt per project
