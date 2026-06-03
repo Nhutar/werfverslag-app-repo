@@ -4,7 +4,7 @@ id: "0002"
 slug: frontend-paginas-navigatie-ui
 title: "Frontend: pagina's, navigatie en UI"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-03
 ---
 
