@@ -125,15 +125,17 @@ export default async function VerslagDetailPagina({
         <NokPuntenLijst punten={puntenData} />
       )}
 
-      {/* Tweede + NOK-punt knop onderaan */}
-      <div className="mt-6">
-        <Link
-          href={`/verslag/${verslag.id}/nieuw-punt`}
-          className="flex items-center justify-center gap-1 w-full bg-white border border-blue-200 text-blue-600 px-4 py-3 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
-        >
-          + NOK-punt toevoegen
-        </Link>
-      </div>
+      {/* Tweede + NOK-punt knop onderaan — enkel bij een gevulde lijst */}
+      {verslag.nokPunten.length > 0 && (
+        <div className="mt-6">
+          <Link
+            href={`/verslag/${verslag.id}/nieuw-punt`}
+            className="flex items-center justify-center gap-1 w-full bg-white border border-blue-200 text-blue-600 px-4 py-3 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors"
+          >
+            + NOK-punt toevoegen
+          </Link>
+        </div>
+      )}
     </div>
   );
 }
