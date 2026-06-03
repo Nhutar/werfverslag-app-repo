@@ -169,10 +169,16 @@ De status wordt automatisch berekend op basis van deadline en of het punt afgevi
 - Deadline
 - Grote knop "Ik heb dit opgelost" (blauw, volle breedte)
 
-**Na afvinken:**
-- Knop verdwijnt
+**Na klikken op de knop verschijnt een kort formulier:**
+- Tekstveld: "Omschrijving van de oplossing" (optioneel, meerdere regels)
+- Knop "Foto toevoegen" (optioneel, camera of galerij)
+- Knop "Bevestigen" (blauw) → slaat op en toont bevestiging
+
+**Na bevestigen:**
+- Formulier verdwijnt
 - Bevestigingsbericht: "Bedankt! Dit punt is gemarkeerd als opgelost."
 - Datum en tijdstip van afvinken worden getoond
+- Omschrijving en foto van de oplossing worden getoond indien ingevuld
 
 **Ongeldige of verlopen token:**
 - Vriendelijke foutmelding: "Deze link is niet meer geldig."
