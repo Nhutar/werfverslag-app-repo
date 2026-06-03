@@ -5,6 +5,11 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-06-03
+
+### Changed
+- Onderste "+ NOK-punt toevoegen" knop verschijnt enkel als er al NOK-punten zijn (geen dubbele knop bij lege lijst)
+
 ## [0.3.0] — 2026-06-03
 
 ### Added
