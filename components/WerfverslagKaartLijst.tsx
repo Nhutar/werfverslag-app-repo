@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
-import { STATUS_DOT, NokStatus } from "@/lib/status";
+import { StatusTellers } from "@/components/StatusTellers";
+import { NokStatus } from "@/lib/status";
 
 interface VerslagKaart {
   id: string;
@@ -42,18 +43,11 @@ export function WerfverslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[]
                 <p className="font-semibold text-gray-900">Werfverslag van {verslag.datum}</p>
                 <p className="text-sm text-gray-500 mt-0.5">Verslaggever: {verslag.verslaggever}</p>
               </div>
-              <div className="flex gap-3 mt-3 flex-wrap justify-end">
-                {(["voorbij-deadline", "bijna-deadline", "open", "opgelost"] as NokStatus[]).map(
-                  (s) =>
-                    verslag.tellers[s] > 0 && (
-                      <span key={s} className="inline-flex items-center gap-1 text-xs text-gray-600">
-                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[s]}`} />
-                        {verslag.tellers[s]}
-                      </span>
-                    )
-                )}
-                {verslag.aantalPunten === 0 && (
+              <div className="mt-3 flex justify-end">
+                {verslag.aantalPunten === 0 ? (
                   <span className="text-xs text-gray-400">Geen punten</span>
+                ) : (
+                  <StatusTellers tellers={verslag.tellers} />
                 )}
               </div>
             </Link>

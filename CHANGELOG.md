@@ -5,6 +5,13 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.9.1] — 2026-06-04
+
+### Changed
+- Statustellers op project- en werfverslagkaarten tonen nu altijd alle 4 de kleuren met aantal (gedimd bij 0), met uitleg-tooltip
+- Statuskleuren-legende toegevoegd onderaan het hoofddashboard en projectdashboard (duidelijk, ook op mobiel)
+- Nieuwe componenten: StatusTellers, StatusLegende
+
 ## [0.9.0] — 2026-06-04
 
 ### Added

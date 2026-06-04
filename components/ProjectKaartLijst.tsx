@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
-import { STATUS_DOT, NokStatus } from "@/lib/status";
+import { StatusTellers } from "@/components/StatusTellers";
+import { NokStatus } from "@/lib/status";
 
 interface ProjectKaart {
   id: string;
@@ -52,20 +53,11 @@ export function ProjectKaartLijst({ projecten }: { projecten: ProjectKaart[] }) 
                   {project.aantalVerslagen}{" "}
                   {project.aantalVerslagen === 1 ? "werfverslag" : "werfverslagen"}
                 </span>
-                <div className="flex gap-3 flex-wrap justify-end">
-                  {(["voorbij-deadline", "bijna-deadline", "open", "opgelost"] as NokStatus[]).map(
-                    (s) =>
-                      project.tellers[s] > 0 && (
-                        <span key={s} className="inline-flex items-center gap-1 text-xs text-gray-600">
-                          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[s]}`} />
-                          {project.tellers[s]}
-                        </span>
-                      )
-                  )}
-                  {project.aantalPunten === 0 && (
-                    <span className="text-xs text-gray-400">Geen punten</span>
-                  )}
-                </div>
+                {project.aantalPunten === 0 ? (
+                  <span className="text-xs text-gray-400">Geen punten</span>
+                ) : (
+                  <StatusTellers tellers={project.tellers} />
+                )}
               </div>
             </Link>
 
