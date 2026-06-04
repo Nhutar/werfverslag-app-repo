@@ -70,7 +70,9 @@ function NokPuntKaart({
           ]}
         />
       </div>
-      <p className="text-sm font-medium text-gray-800 mb-2">{punt.titel}</p>
+      <p className="text-sm font-medium text-gray-800 mb-2">
+        {punt.titel || <span className="text-gray-400 italic">(geen titel)</span>}
+      </p>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
         <span>
           <span className="font-medium">Verantwoordelijke:</span>{" "}
