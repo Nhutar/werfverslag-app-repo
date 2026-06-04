@@ -5,6 +5,12 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.9.2] — 2026-06-04
+
+### Fixed
+- Statuskleuren werden niet weergegeven (grijs): Tailwind scant nu ook `lib/` + safelist voor de statuskleuren
+- Verantwoordelijke-modus: "← Terug naar project" verborgen, zodat een verantwoordelijke via de magic link opgesloten blijft op zijn werfverslag (geen uitweg naar projecten waar hij zou kunnen bewerken)
+
 ## [0.9.1] — 2026-06-04
 
 ### Changed
