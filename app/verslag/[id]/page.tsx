@@ -58,12 +58,16 @@ export default async function VerslagDetailPagina({
 
   const kopInhoud = (
     <>
-      <Link
-        href={`/project/${verslag.projectId}`}
-        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
-      >
-        ← Terug naar project
-      </Link>
+      {/* Terug-link enkel voor de verslagmaker; een verantwoordelijke blijft
+          opgesloten op dit ene werfverslag (geen uitweg naar projecten). */}
+      {!verantwoordelijkeModus && (
+        <Link
+          href={`/project/${verslag.projectId}`}
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        >
+          ← Terug naar project
+        </Link>
+      )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4">
         <h1 className="text-xl font-bold text-gray-900">{verslag.project.naam}</h1>
