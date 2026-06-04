@@ -5,6 +5,13 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-06-04
+
+### Changed
+- Discipline-veld verwijderd uit het NOK-punt formulier; discipline wordt automatisch overgenomen van de gekozen verantwoordelijke
+- Nieuwste NOK-punten verschijnen bovenaan de lijst (nieuwste eerst)
+- Onderste "+ NOK-punt toevoegen" knop verwijderd
+
 ## [0.4.0] — 2026-06-04
 
 ### Added

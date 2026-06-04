@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { DISCIPLINES } from "@/lib/disciplines";
 
 interface Aanwezige {
   id: string;
@@ -30,7 +29,6 @@ export default function NieuwNokPuntPagina({
   const [verslag, setVerslag] = useState<VerslagInfo | null>(null);
   const [laden, setLaden] = useState(true);
 
-  const [discipline, setDiscipline] = useState<string>(DISCIPLINES[0]);
   const [omschrijving, setOmschrijving] = useState("");
   const [aanwezigeId, setAanwezigeId] = useState("");
   const [deadline, setDeadline] = useState(() => {
@@ -68,7 +66,6 @@ export default function NieuwNokPuntPagina({
     const gekozen = Array.from(e.target.files ?? []);
     const samengevoegd = [...fotos, ...gekozen].slice(0, MAX_FOTOS);
     setFotos(samengevoegd);
-    // input resetten zodat dezelfde foto opnieuw gekozen kan worden
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -82,11 +79,18 @@ export default function NieuwNokPuntPagina({
       setFout("Kies een verantwoordelijke.");
       return;
     }
+
+    const gekozenAanwezige = verslag?.aanwezigen.find((a) => a.id === aanwezigeId);
+    if (!gekozenAanwezige) {
+      setFout("Verantwoordelijke niet gevonden.");
+      return;
+    }
+
     setBezig(true);
     setFout(null);
 
     const fd = new FormData();
-    fd.append("discipline", discipline);
+    fd.append("discipline", gekozenAanwezige.discipline);
     fd.append("omschrijving", omschrijving);
     fd.append("aanwezigeId", aanwezigeId);
     fd.append("deadline", deadline);
@@ -139,24 +143,6 @@ export default function NieuwNokPuntPagina({
 
       <form onSubmit={opslaan} className="flex flex-col gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4">
-          {/* Discipline */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Discipline <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={discipline}
-              onChange={(e) => setDiscipline(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {DISCIPLINES.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Omschrijving */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -179,7 +165,6 @@ export default function NieuwNokPuntPagina({
               <span className="text-gray-400 font-normal">(max {MAX_FOTOS})</span>
             </label>
 
-            {/* Previews */}
             {previews.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
                 {previews.map((url, i) => (
@@ -202,7 +187,6 @@ export default function NieuwNokPuntPagina({
               </div>
             )}
 
-            {/* Upload knop — verbergen als max bereikt */}
             {fotos.length < MAX_FOTOS && (
               <>
                 <input
