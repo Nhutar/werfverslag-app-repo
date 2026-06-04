@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 interface Aanwezige {
@@ -18,7 +17,6 @@ export default function NokPuntAanpassenPagina({
 }: {
   params: { id: string; nokPuntId: string };
 }) {
-  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [laden, setLaden] = useState(true);
@@ -101,7 +99,7 @@ export default function NokPuntAanpassenPagina({
     });
 
     if (res.ok) {
-      router.push(`/verslag/${params.id}`);
+      window.location.href = `/verslag/${params.id}`;
     } else {
       const data = await res.json().catch(() => ({}));
       setFout(data.error ?? "Er is iets misgegaan. Probeer opnieuw.");
