@@ -4,7 +4,7 @@ id: "0006"
 slug: nok-punt-titel-bekijk-opgelost
 title: "NOK-punt: titel, bekijk-modaal en opgelost markeren"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
