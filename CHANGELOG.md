@@ -5,6 +5,19 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-06-04
+
+### Added
+- Spec 0004: NOK-punt formulier functioneel — opslaan in database via POST /api/verslagen/[id]/nok-punten
+- Foto-upload naar Supabase Storage (max 5 foto's, camera op mobiel + bestandskiezer)
+- Foto-thumbnails zichtbaar op de verslag-detailpagina per NOK-punt
+- Verantwoordelijke kiezen uit aanwezigen, e-mailadres wordt automatisch getoond
+- GET /api/verslagen/[id] endpoint voor het formulier
+
+### Changed
+- NokPunt.fotoUrl (enkelvoud) vervangen door NokPunt.fotoUrls (array, max 5)
+- Nieuw-punt pagina omgebouwd van Server Component naar Client Component
+
 ## [0.3.1] — 2026-06-03
 
 ### Changed

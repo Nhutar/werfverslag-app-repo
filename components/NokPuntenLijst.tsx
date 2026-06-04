@@ -13,6 +13,7 @@ export interface NokPuntData {
   status: string;
   opgelostOp: string | null;
   opgelostDoorNaam: string | null;
+  fotoUrls: string[];
 }
 
 function NokPuntKaart({ punt }: { punt: NokPuntData }) {
@@ -43,6 +44,26 @@ function NokPuntKaart({ punt }: { punt: NokPuntData }) {
           <span className="font-medium">Deadline:</span> {deadline}
         </span>
       </div>
+      {/* Foto thumbnails */}
+      {punt.fotoUrls.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          {punt.fotoUrls.slice(0, 3).map((url, i) => (
+            <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt={`Foto ${i + 1}`}
+                className="w-14 h-14 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition-opacity"
+              />
+            </a>
+          ))}
+          {punt.fotoUrls.length > 3 && (
+            <div className="w-14 h-14 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium">
+              +{punt.fotoUrls.length - 3}
+            </div>
+          )}
+        </div>
+      )}
       {punt.status === "opgelost" && punt.opgelostOp && (
         <p className="text-xs text-green-600 mt-2">
           Opgelost op {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}

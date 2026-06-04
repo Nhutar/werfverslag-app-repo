@@ -36,6 +36,7 @@ export default async function VerslagDetailPagina({
     status: p.status,
     opgelostOp: p.opgelostOp ? p.opgelostOp.toISOString() : null,
     opgelostDoorNaam: p.opgelostDoorNaam,
+    fotoUrls: p.fotoUrls,
   }));
 
   return (
