@@ -8,24 +8,33 @@ export async function GET(
 ) {
   const verslag = await prisma.werfverslag.findUnique({
     where: { id: params.id },
-    include: { aanwezigen: true },
+    include: {
+      project: { include: { deelnemers: true } },
+      aanwezigen: true,
+    },
   });
 
   if (!verslag) {
     return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
   }
 
+  const aanwezigeIds = new Set(verslag.aanwezigen.map((a) => a.projectDeelnemerId));
+
   return NextResponse.json({
     id: verslag.id,
-    naam: verslag.naam,
+    projectId: verslag.projectId,
+    projectNaam: verslag.project.naam,
+    werfadres: verslag.project.werfadres,
     verslaggever: verslag.verslaggever,
     datum: verslag.datum.toISOString().split("T")[0],
-    werfadres: verslag.werfadres,
-    aanwezigen: verslag.aanwezigen.map((a) => ({
-      id: a.id,
-      naam: a.naam,
-      discipline: a.discipline,
-      email: a.email,
+    aanwezigeDeelnemerIds: Array.from(aanwezigeIds),
+    // Alle projectdeelnemers (voor de verantwoordelijke-dropdown en aanwezigheids-checkboxes)
+    deelnemers: verslag.project.deelnemers.map((d) => ({
+      id: d.id,
+      naam: d.naam,
+      discipline: d.discipline,
+      email: d.email,
+      aanwezig: aanwezigeIds.has(d.id),
     })),
   });
 }
@@ -35,18 +44,29 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const body = await req.json();
-  const { naam, verslaggever, datum, werfadres } = body;
+  const { verslaggever, datum, aanwezigeDeelnemerIds } = body;
 
-  if (!naam || !verslaggever || !datum || !werfadres) {
+  if (!verslaggever?.trim() || !datum) {
     return NextResponse.json({ error: "Verplichte velden ontbreken" }, { status: 400 });
   }
 
-  const verslag = await prisma.werfverslag.update({
+  await prisma.werfverslag.update({
     where: { id: params.id },
-    data: { naam, verslaggever, datum: new Date(datum), werfadres },
+    data: { verslaggever, datum: new Date(datum) },
   });
 
-  return NextResponse.json({ id: verslag.id });
+  // Aanwezigheden opnieuw zetten
+  if (Array.isArray(aanwezigeDeelnemerIds)) {
+    await prisma.werfverslagAanwezige.deleteMany({ where: { werfverslagId: params.id } });
+    await prisma.werfverslagAanwezige.createMany({
+      data: aanwezigeDeelnemerIds.map((deelnemerId: string) => ({
+        werfverslagId: params.id,
+        projectDeelnemerId: deelnemerId,
+      })),
+    });
+  }
+
+  return NextResponse.json({ id: params.id });
 }
 
 export async function DELETE(
@@ -55,31 +75,29 @@ export async function DELETE(
 ) {
   const verslagId = params.id;
 
-  // Haal alle NOK-punten op voor foto-verwijdering
   const nokPunten = await prisma.nokPunt.findMany({
     where: { werfverslagId: verslagId },
-    select: { id: true, fotoUrls: true },
+    select: { fotoUrls: true, oplossingFotoUrl: true },
   });
 
-  // Verwijder foto's uit Supabase Storage per NOK-punt
+  const paden: string[] = [];
   for (const punt of nokPunten) {
-    if (punt.fotoUrls.length > 0) {
-      const paden = punt.fotoUrls.map((url) => {
-        const parts = url.split("/nok-fotos/");
-        return parts[1] ?? "";
-      }).filter(Boolean);
-      if (paden.length > 0) {
-        await supabaseAdmin.storage.from("nok-fotos").remove(paden);
-      }
+    for (const url of punt.fotoUrls) {
+      const deel = url.split("/nok-fotos/")[1];
+      if (deel) paden.push(deel);
+    }
+    if (punt.oplossingFotoUrl) {
+      const deel = punt.oplossingFotoUrl.split("/nok-fotos/")[1];
+      if (deel) paden.push(deel);
     }
   }
+  if (paden.length > 0) {
+    await supabaseAdmin.storage.from("nok-fotos").remove(paden);
+  }
 
-  // Cascade verwijdering via Prisma (tokens → punten → aanwezigen → verslag)
-  await prisma.magicLinkToken.deleteMany({
-    where: { werfverslagId: verslagId },
-  });
+  await prisma.magicLinkToken.deleteMany({ where: { werfverslagId: verslagId } });
   await prisma.nokPunt.deleteMany({ where: { werfverslagId: verslagId } });
-  await prisma.aanwezige.deleteMany({ where: { werfverslagId: verslagId } });
+  await prisma.werfverslagAanwezige.deleteMany({ where: { werfverslagId: verslagId } });
   await prisma.werfverslag.delete({ where: { id: verslagId } });
 
   return NextResponse.json({ ok: true });

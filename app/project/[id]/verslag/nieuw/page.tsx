@@ -7,45 +7,42 @@ import {
   WerfverslagFormData,
 } from "@/components/WerfverslagFormulier";
 
-export default function WerfverslagAanpassenPagina({ params }: { params: { id: string } }) {
+export default function NieuwWerfverslagPagina({ params }: { params: { id: string } }) {
   const [projectNaam, setProjectNaam] = useState("");
-  const [verslaggever, setVerslaggever] = useState("");
-  const [datum, setDatum] = useState("");
   const [deelnemers, setDeelnemers] = useState<DeelnemerKeuze[] | null>(null);
 
   useEffect(() => {
-    fetch(`/api/verslagen/${params.id}`)
+    fetch(`/api/projecten/${params.id}`)
       .then((r) => r.json())
       .then((data) => {
-        setProjectNaam(data.projectNaam ?? "");
-        setVerslaggever(data.verslaggever ?? "");
-        setDatum(data.datum ?? "");
+        setProjectNaam(data.naam ?? "");
         setDeelnemers(
-          (data.deelnemers ?? []).map(
-            (d: { id: string; naam: string; discipline: string; aanwezig: boolean }) => ({
-              id: d.id,
-              naam: d.naam,
-              discipline: d.discipline,
-              aanwezig: d.aanwezig,
-            })
-          )
+          (data.deelnemers ?? []).map((d: { id: string; naam: string; discipline: string }) => ({
+            id: d.id,
+            naam: d.naam,
+            discipline: d.discipline,
+            aanwezig: false,
+          }))
         );
       });
   }, [params.id]);
 
   async function opslaan(data: WerfverslagFormData): Promise<string | null> {
-    const res = await fetch(`/api/verslagen/${params.id}`, {
-      method: "PATCH",
+    const res = await fetch(`/api/projecten/${params.id}/werfverslagen`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     if (res.ok) {
-      window.location.href = `/verslag/${params.id}`;
+      const { id } = await res.json();
+      window.location.href = `/verslag/${id}`;
       return null;
     }
     const d = await res.json().catch(() => ({}));
     return d.error ?? "Er is iets misgegaan.";
   }
+
+  const vandaag = new Date().toISOString().split("T")[0];
 
   if (!deelnemers) {
     return (
@@ -57,13 +54,13 @@ export default function WerfverslagAanpassenPagina({ params }: { params: { id: s
 
   return (
     <WerfverslagFormulier
-      titel="Werfverslag aanpassen"
+      titel="Nieuw werfverslag"
       projectNaam={projectNaam}
-      initieleVerslaggever={verslaggever}
-      initieleDatum={datum}
+      initieleVerslaggever=""
+      initieleDatum={vandaag}
       deelnemers={deelnemers}
       onOpslaan={opslaan}
-      annulerenHref={`/verslag/${params.id}`}
+      annulerenHref={`/project/${params.id}`}
     />
   );
 }

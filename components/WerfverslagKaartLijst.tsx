@@ -9,14 +9,14 @@ import { STATUS_DOT, NokStatus } from "@/lib/status";
 
 interface VerslagKaart {
   id: string;
-  naam: string;
   datum: string;
-  werfadres: string;
-  aantalNokPunten: number;
+  verslaggever: string;
+  projectId: string;
+  aantalPunten: number;
   tellers: Record<NokStatus, number>;
 }
 
-export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) {
+export function WerfverslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) {
   const router = useRouter();
   const [teVerwijderen, setTeVerwijderen] = useState<VerslagKaart | null>(null);
   const [bezig, setBezig] = useState(false);
@@ -33,19 +33,15 @@ export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) 
     <>
       <div className="flex flex-col gap-3">
         {verslagen.map((verslag) => (
-          <div key={verslag.id} className="relative group">
+          <div key={verslag.id} className="relative">
             <Link
               href={`/verslag/${verslag.id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
             >
-              {/* Naam + datum + adres */}
               <div className="pr-8">
-                <p className="font-semibold text-gray-900 truncate">{verslag.naam}</p>
-                <p className="text-sm text-gray-500 mt-0.5">{verslag.datum}</p>
-                <p className="text-xs text-gray-400 mt-0.5 truncate">{verslag.werfadres}</p>
+                <p className="font-semibold text-gray-900">Werfverslag van {verslag.datum}</p>
+                <p className="text-sm text-gray-500 mt-0.5">Verslaggever: {verslag.verslaggever}</p>
               </div>
-
-              {/* Puntenteller onderaan rechts */}
               <div className="flex gap-3 mt-3 flex-wrap justify-end">
                 {(["voorbij-deadline", "bijna-deadline", "open", "opgelost"] as NokStatus[]).map(
                   (s) =>
@@ -56,25 +52,17 @@ export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) 
                       </span>
                     )
                 )}
-                {verslag.aantalNokPunten === 0 && (
+                {verslag.aantalPunten === 0 && (
                   <span className="text-xs text-gray-400">Geen punten</span>
                 )}
               </div>
             </Link>
 
-            {/* 3-puntjes menu */}
             <div className="absolute top-4 right-4">
               <DrieKnopjesMenu
                 opties={[
-                  {
-                    label: "Aanpassen",
-                    onClick: () => router.push(`/verslag/${verslag.id}/aanpassen`),
-                  },
-                  {
-                    label: "Verwijderen",
-                    onClick: () => setTeVerwijderen(verslag),
-                    gevaarlijk: true,
-                  },
+                  { label: "Aanpassen", onClick: () => router.push(`/verslag/${verslag.id}/aanpassen`) },
+                  { label: "Verwijderen", onClick: () => setTeVerwijderen(verslag), gevaarlijk: true },
                 ]}
               />
             </div>
@@ -84,11 +72,11 @@ export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) 
 
       {teVerwijderen && (
         <BevestigingDialog
-          titel="Verslag verwijderen?"
-          bericht={`Ben je zeker dat je "${teVerwijderen.naam}" wil verwijderen?`}
+          titel="Werfverslag verwijderen?"
+          bericht={`Ben je zeker dat je het werfverslag van ${teVerwijderen.datum} wil verwijderen?`}
           waarschuwing={
-            teVerwijderen.aantalNokPunten > 0
-              ? `Dit verslag bevat ${teVerwijderen.aantalNokPunten} NOK-punt${teVerwijderen.aantalNokPunten === 1 ? "" : "en"}. Alle punten en foto's worden ook verwijderd.`
+            teVerwijderen.aantalPunten > 0
+              ? `Dit verslag bevat ${teVerwijderen.aantalPunten} NOK-punt${teVerwijderen.aantalPunten === 1 ? "" : "en"}. Alles wordt mee verwijderd.`
               : undefined
           }
           bezig={bezig}

@@ -11,7 +11,7 @@ export async function GET(
 ) {
   const punt = await prisma.nokPunt.findUnique({
     where: { id: params.id },
-    include: { werfverslag: { include: { aanwezigen: true } } },
+    include: { werfverslag: { include: { project: { include: { deelnemers: true } } } } },
   });
 
   if (!punt) {
@@ -33,12 +33,13 @@ export async function GET(
     oplossingOmschrijving: punt.oplossingOmschrijving,
     oplossingFotoUrl: punt.oplossingFotoUrl,
     verslagId: punt.werfverslagId,
-    verslagNaam: punt.werfverslag.naam,
-    aanwezigen: punt.werfverslag.aanwezigen.map((a) => ({
-      id: a.id,
-      naam: a.naam,
-      discipline: a.discipline,
-      email: a.email,
+    verslagNaam: punt.werfverslag.project.naam,
+    // Alle projectdeelnemers voor de verantwoordelijke-dropdown
+    deelnemers: punt.werfverslag.project.deelnemers.map((d) => ({
+      id: d.id,
+      naam: d.naam,
+      discipline: d.discipline,
+      email: d.email,
     })),
   });
 }
@@ -49,7 +50,7 @@ export async function PATCH(
 ) {
   const punt = await prisma.nokPunt.findUnique({
     where: { id: params.id },
-    include: { werfverslag: { include: { aanwezigen: true } } },
+    include: { werfverslag: { include: { project: { include: { deelnemers: true } } } } },
   });
   if (!punt) {
     return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
@@ -64,17 +65,17 @@ export async function PATCH(
 
   const titel = formData.get("titel") as string | null;
   const omschrijving = formData.get("omschrijving") as string | null;
-  const aanwezigeId = formData.get("aanwezigeId") as string | null;
+  const deelnemerId = formData.get("deelnemerId") as string | null;
   const deadlineStr = formData.get("deadline") as string | null;
   const bestaandeUrlsRaw = formData.get("bestaandeFotoUrls") as string | null;
 
-  if (!titel || !aanwezigeId || !deadlineStr) {
+  if (!titel || !deelnemerId || !deadlineStr) {
     return NextResponse.json({ error: "Verplichte velden ontbreken" }, { status: 400 });
   }
 
-  const aanwezige = punt.werfverslag.aanwezigen.find((a) => a.id === aanwezigeId);
-  if (!aanwezige) {
-    return NextResponse.json({ error: "Aanwezige niet gevonden" }, { status: 400 });
+  const deelnemer = punt.werfverslag.project.deelnemers.find((d) => d.id === deelnemerId);
+  if (!deelnemer) {
+    return NextResponse.json({ error: "Verantwoordelijke niet gevonden" }, { status: 400 });
   }
 
   const deadline = new Date(deadlineStr);
@@ -141,9 +142,9 @@ export async function PATCH(
     data: {
       titel: titel!,
       omschrijving: omschrijving || null,
-      discipline: aanwezige.discipline,
-      verantwoordelijkeNaam: aanwezige.naam,
-      verantwoordelijkeEmail: aanwezige.email,
+      discipline: deelnemer.discipline,
+      verantwoordelijkeNaam: deelnemer.naam,
+      verantwoordelijkeEmail: deelnemer.email,
       deadline,
       fotoUrls,
     },

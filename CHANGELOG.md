@@ -5,6 +5,32 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-06-04
+
+### Added
+- Spec 0009: Projectlaag — nieuwe hiërarchie Hoofddashboard → Project → Werfverslag → NOK-punten
+- Hoofddashboard (`/`) toont projecten met statusoverzicht
+- Project aanmaken/aanpassen/verwijderen met deelnemende verantwoordelijken (`/project/nieuw`, `/project/[id]/aanpassen`)
+- Projectdashboard (`/project/[id]`) met werfverslagen en projectinfo
+- Werfverslag aanmaken onder een project met aanwezigheids-checkboxes (de "omkering")
+- NOK-punt-verantwoordelijke kiesbaar uit alle projectdeelnemers (ook niet-aanwezigen)
+- API: `/api/projecten`, `/api/projecten/[id]`, `/api/projecten/[id]/werfverslagen`
+- Componenten: ProjectKaartLijst, ProjectFormulier, WerfverslagKaartLijst, WerfverslagFormulier
+
+### Changed
+- Werfadres en projectnaam staan nu op projectniveau (niet meer per werfverslag)
+- Werfverslag = verslaggever + datum, hoort bij een project
+- Notificaties en e-mail gebruiken nu de projectnaam
+- NOK-punt-routes lezen de verantwoordelijke uit projectdeelnemers
+
+### Removed
+- Oud `Aanwezige`-model (vervangen door WerfverslagAanwezige join naar ProjectDeelnemer)
+- Oude `/nieuw` pagina en `/api/verslagen` POST + `/api/aanwezigen` routes
+- AanwezigenBeheer en oude VerslagKaartLijst componenten
+
+### Database
+- Destructieve migratie: bestaande testverslagen gewist; project/project_deelnemer/werfverslag_aanwezige toegevoegd
+
 ## [0.8.0] — 2026-06-04
 
 ### Added
