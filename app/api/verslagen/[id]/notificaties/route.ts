@@ -41,6 +41,15 @@ export async function POST(
     ontvangers = ontvangers.filter((a) => set.has(a.email));
   }
 
+  // Dedupliceer op e-mailadres (hoofdletterongevoelig): nooit twee mails naar hetzelfde adres
+  const gezien = new Set<string>();
+  ontvangers = ontvangers.filter((a) => {
+    const sleutel = a.email.trim().toLowerCase();
+    if (gezien.has(sleutel)) return false;
+    gezien.add(sleutel);
+    return true;
+  });
+
   if (ontvangers.length === 0) {
     return NextResponse.json({ error: "Geen ontvangers gevonden" }, { status: 400 });
   }
@@ -68,7 +77,8 @@ export async function POST(
     const eigenPunten = verslag.nokPunten
       .filter(
         (p) =>
-          p.verantwoordelijkeEmail === ontvanger.email && p.status !== "opgelost"
+          p.verantwoordelijkeEmail.trim().toLowerCase() ===
+            ontvanger.email.trim().toLowerCase() && p.status !== "opgelost"
       )
       .map((p) => ({
         titel: p.titel,
