@@ -38,46 +38,31 @@ export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) 
               href={`/verslag/${verslag.id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 truncate pr-8">
-                    {verslag.naam}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-0.5">{verslag.datum}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 truncate">
-                    {verslag.werfadres}
-                  </p>
-                </div>
-                <div className="flex gap-3 flex-shrink-0 flex-wrap justify-end items-center">
-                  {(
-                    [
-                      "voorbij-deadline",
-                      "bijna-deadline",
-                      "open",
-                      "opgelost",
-                    ] as NokStatus[]
-                  ).map(
-                    (s) =>
-                      verslag.tellers[s] > 0 && (
-                        <span
-                          key={s}
-                          className="inline-flex items-center gap-1 text-xs text-gray-600"
-                        >
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[s]}`}
-                          />
-                          {verslag.tellers[s]}
-                        </span>
-                      )
-                  )}
-                  {verslag.aantalNokPunten === 0 && (
-                    <span className="text-xs text-gray-400">Geen punten</span>
-                  )}
-                </div>
+              {/* Naam + datum + adres */}
+              <div className="pr-8">
+                <p className="font-semibold text-gray-900 truncate">{verslag.naam}</p>
+                <p className="text-sm text-gray-500 mt-0.5">{verslag.datum}</p>
+                <p className="text-xs text-gray-400 mt-0.5 truncate">{verslag.werfadres}</p>
+              </div>
+
+              {/* Puntenteller onderaan */}
+              <div className="flex gap-3 mt-3 flex-wrap">
+                {(["voorbij-deadline", "bijna-deadline", "open", "opgelost"] as NokStatus[]).map(
+                  (s) =>
+                    verslag.tellers[s] > 0 && (
+                      <span key={s} className="inline-flex items-center gap-1 text-xs text-gray-600">
+                        <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[s]}`} />
+                        {verslag.tellers[s]}
+                      </span>
+                    )
+                )}
+                {verslag.aantalNokPunten === 0 && (
+                  <span className="text-xs text-gray-400">Geen punten</span>
+                )}
               </div>
             </Link>
 
-            {/* 3-puntjes menu — absoluut gepositioneerd bovenop de kaart */}
+            {/* 3-puntjes menu */}
             <div className="absolute top-4 right-4">
               <DrieKnopjesMenu
                 opties={[
