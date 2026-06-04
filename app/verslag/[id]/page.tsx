@@ -30,13 +30,17 @@ export default async function VerslagDetailPagina({
   // Punten omzetten naar serialiseerbare data voor het client component
   const puntenData: NokPuntData[] = verslag.nokPunten.map((p) => ({
     id: p.id,
+    titel: p.titel,
     discipline: p.discipline,
     omschrijving: p.omschrijving,
     verantwoordelijkeNaam: p.verantwoordelijkeNaam,
+    verantwoordelijkeEmail: p.verantwoordelijkeEmail,
     deadline: p.deadline.toISOString(),
     status: p.status,
     opgelostOp: p.opgelostOp ? p.opgelostOp.toISOString() : null,
     opgelostDoorNaam: p.opgelostDoorNaam,
+    oplossingOmschrijving: p.oplossingOmschrijving,
+    oplossingFotoUrl: p.oplossingFotoUrl,
     fotoUrls: p.fotoUrls,
     verslagId: verslag.id,
   }));

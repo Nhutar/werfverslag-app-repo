@@ -6,16 +6,21 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { berekenStatus } from "@/lib/status";
 import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
+import { BekijkNokPuntModaal, NokPuntDetail } from "@/components/BekijkNokPuntModaal";
 
 export interface NokPuntData {
   id: string;
+  titel: string;
   discipline: string;
-  omschrijving: string;
+  omschrijving: string | null;
   verantwoordelijkeNaam: string;
+  verantwoordelijkeEmail: string;
   deadline: string; // ISO string
   status: string;
   opgelostOp: string | null;
   opgelostDoorNaam: string | null;
+  oplossingOmschrijving: string | null;
+  oplossingFotoUrl: string | null;
   fotoUrls: string[];
   verslagId: string;
 }
@@ -23,9 +28,11 @@ export interface NokPuntData {
 function NokPuntKaart({
   punt,
   onVerwijder,
+  onBekijk,
 }: {
   punt: NokPuntData;
   onVerwijder: (punt: NokPuntData) => void;
+  onBekijk: (punt: NokPuntData) => void;
 }) {
   const router = useRouter();
   const status = berekenStatus(new Date(punt.deadline), punt.status);
@@ -47,6 +54,10 @@ function NokPuntKaart({
         <DrieKnopjesMenu
           opties={[
             {
+              label: "Bekijk",
+              onClick: () => onBekijk(punt),
+            },
+            {
               label: "Aanpassen",
               onClick: () =>
                 router.push(`/verslag/${punt.verslagId}/punt/${punt.id}/aanpassen`),
@@ -59,9 +70,7 @@ function NokPuntKaart({
           ]}
         />
       </div>
-      <p className="text-sm font-medium text-gray-800 mb-2">
-        {punt.omschrijving}
-      </p>
+      <p className="text-sm font-medium text-gray-800 mb-2">{punt.titel}</p>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
         <span>
           <span className="font-medium">Verantwoordelijke:</span>{" "}
@@ -105,6 +114,7 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
   const router = useRouter();
   const [opgelostOpen, setOpgelostOpen] = useState(false);
   const [teVerwijderen, setTeVerwijderen] = useState<NokPuntData | null>(null);
+  const [teBekijken, setTeBekijken] = useState<NokPuntDetail | null>(null);
   const [bezig, setBezig] = useState(false);
 
   async function verwijder(punt: NokPuntData) {
@@ -115,15 +125,20 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
     router.refresh();
   }
 
+  async function bekijk(punt: NokPuntData) {
+    const res = await fetch(`/api/nok-punten/${punt.id}`);
+    const data = await res.json();
+    setTeBekijken(data as NokPuntDetail);
+  }
+
   const openPunten = punten.filter((p) => p.status !== "opgelost");
   const opgelostePunten = punten.filter((p) => p.status === "opgelost");
 
   return (
     <>
       <div className="flex flex-col gap-3">
-        {/* Open punten */}
         {openPunten.map((punt) => (
-          <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} />
+          <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} />
         ))}
 
         {openPunten.length === 0 && opgelostePunten.length > 0 && (
@@ -132,7 +147,6 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
           </p>
         )}
 
-        {/* Opgeloste punten — inklapbare sectie */}
         {opgelostePunten.length > 0 && (
           <div className="mt-2">
             <button
@@ -140,16 +154,14 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
               onClick={() => setOpgelostOpen(!opgelostOpen)}
               className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800 w-full"
             >
-              <span className={`transition-transform ${opgelostOpen ? "rotate-90" : ""}`}>
-                ▶
-              </span>
+              <span className={`transition-transform ${opgelostOpen ? "rotate-90" : ""}`}>▶</span>
               Opgelost ({opgelostePunten.length})
             </button>
 
             {opgelostOpen && (
               <div className="flex flex-col gap-3 mt-3">
                 {opgelostePunten.map((punt) => (
-                  <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} />
+                  <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} />
                 ))}
               </div>
             )}
@@ -157,10 +169,14 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
         )}
       </div>
 
+      {teBekijken && (
+        <BekijkNokPuntModaal punt={teBekijken} onSluit={() => setTeBekijken(null)} />
+      )}
+
       {teVerwijderen && (
         <BevestigingDialog
           titel="NOK-punt verwijderen?"
-          bericht={`Ben je zeker dat je dit NOK-punt wil verwijderen?`}
+          bericht="Ben je zeker dat je dit NOK-punt wil verwijderen?"
           bezig={bezig}
           onBevestig={() => verwijder(teVerwijderen)}
           onAnnuleer={() => setTeVerwijderen(null)}

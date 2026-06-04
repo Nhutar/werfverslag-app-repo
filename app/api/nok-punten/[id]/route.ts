@@ -20,12 +20,18 @@ export async function GET(
 
   return NextResponse.json({
     id: punt.id,
+    titel: punt.titel,
     omschrijving: punt.omschrijving,
     discipline: punt.discipline,
     verantwoordelijkeNaam: punt.verantwoordelijkeNaam,
     verantwoordelijkeEmail: punt.verantwoordelijkeEmail,
     deadline: punt.deadline.toISOString().split("T")[0],
+    status: punt.status,
     fotoUrls: punt.fotoUrls,
+    opgelostOp: punt.opgelostOp ? punt.opgelostOp.toISOString() : null,
+    opgelostDoorNaam: punt.opgelostDoorNaam,
+    oplossingOmschrijving: punt.oplossingOmschrijving,
+    oplossingFotoUrl: punt.oplossingFotoUrl,
     verslagId: punt.werfverslagId,
     verslagNaam: punt.werfverslag.naam,
     aanwezigen: punt.werfverslag.aanwezigen.map((a) => ({
@@ -56,12 +62,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Ongeldig formulier" }, { status: 400 });
   }
 
+  const titel = formData.get("titel") as string | null;
   const omschrijving = formData.get("omschrijving") as string | null;
   const aanwezigeId = formData.get("aanwezigeId") as string | null;
   const deadlineStr = formData.get("deadline") as string | null;
   const bestaandeUrlsRaw = formData.get("bestaandeFotoUrls") as string | null;
 
-  if (!omschrijving || !aanwezigeId || !deadlineStr) {
+  if (!titel || !aanwezigeId || !deadlineStr) {
     return NextResponse.json({ error: "Verplichte velden ontbreken" }, { status: 400 });
   }
 
@@ -132,7 +139,8 @@ export async function PATCH(
   await prisma.nokPunt.update({
     where: { id: params.id },
     data: {
-      omschrijving,
+      titel: titel!,
+      omschrijving: omschrijving || null,
       discipline: aanwezige.discipline,
       verantwoordelijkeNaam: aanwezige.naam,
       verantwoordelijkeEmail: aanwezige.email,

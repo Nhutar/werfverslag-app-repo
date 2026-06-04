@@ -34,8 +34,9 @@ model NokPunt {
   id                      String           @id @default(uuid())
   werfverslagId           String           @map("werfverslag_id")
   werfverslag             Werfverslag      @relation(fields: [werfverslagId], references: [id])
+  titel                   String
   discipline              String
-  omschrijving            String
+  omschrijving            String?
   fotoUrls                String[]         @default([]) @map("foto_urls")
   verantwoordelijkeNaam   String           @map("verantwoordelijke_naam")
   verantwoordelijkeEmail  String           @map("verantwoordelijke_email")
