@@ -36,7 +36,7 @@ model NokPunt {
   werfverslag             Werfverslag      @relation(fields: [werfverslagId], references: [id])
   discipline              String
   omschrijving            String
-  fotoUrl                 String?          @map("foto_url")
+  fotoUrls                String[]         @default([]) @map("foto_urls")
   verantwoordelijkeNaam   String           @map("verantwoordelijke_naam")
   verantwoordelijkeEmail  String           @map("verantwoordelijke_email")
   deadline                DateTime         @db.Date
