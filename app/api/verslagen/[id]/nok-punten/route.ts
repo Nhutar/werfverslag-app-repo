@@ -13,7 +13,7 @@ export async function POST(
 
   const verslag = await prisma.werfverslag.findUnique({
     where: { id: verslagId },
-    include: { aanwezigen: true },
+    include: { project: { include: { deelnemers: true } } },
   });
   if (!verslag) {
     return NextResponse.json({ error: "Verslag niet gevonden" }, { status: 404 });
@@ -27,19 +27,19 @@ export async function POST(
   }
 
   const titel = formData.get("titel") as string | null;
-  const discipline = formData.get("discipline") as string | null;
   const omschrijving = formData.get("omschrijving") as string | null;
-  const aanwezigeId = formData.get("aanwezigeId") as string | null;
+  const deelnemerId = formData.get("deelnemerId") as string | null;
   const deadlineStr = formData.get("deadline") as string | null;
 
-  if (!titel || !discipline || !aanwezigeId || !deadlineStr) {
+  if (!titel || !deelnemerId || !deadlineStr) {
     return NextResponse.json({ error: "Verplichte velden ontbreken" }, { status: 400 });
   }
 
-  const aanwezige = verslag.aanwezigen.find((a) => a.id === aanwezigeId);
-  if (!aanwezige) {
-    return NextResponse.json({ error: "Aanwezige niet gevonden" }, { status: 400 });
+  const deelnemer = verslag.project.deelnemers.find((d) => d.id === deelnemerId);
+  if (!deelnemer) {
+    return NextResponse.json({ error: "Verantwoordelijke niet gevonden" }, { status: 400 });
   }
+  const discipline = deelnemer.discipline;
 
   const deadline = new Date(deadlineStr);
   if (isNaN(deadline.getTime())) {
@@ -92,8 +92,8 @@ export async function POST(
       titel: titel!,
       discipline,
       omschrijving: omschrijving || null,
-      verantwoordelijkeNaam: aanwezige.naam,
-      verantwoordelijkeEmail: aanwezige.email,
+      verantwoordelijkeNaam: deelnemer.naam,
+      verantwoordelijkeEmail: deelnemer.email,
       deadline,
       fotoUrls,
       status: "open",

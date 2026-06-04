@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-interface Aanwezige {
+interface Deelnemer {
   id: string;
   naam: string;
   discipline: string;
@@ -11,8 +11,8 @@ interface Aanwezige {
 }
 
 interface VerslagInfo {
-  naam: string;
-  aanwezigen: Aanwezige[];
+  projectNaam: string;
+  deelnemers: Deelnemer[];
 }
 
 const MAX_FOTOS = 5;
@@ -29,7 +29,7 @@ export default function NieuwNokPuntPagina({
 
   const [titel, setTitel] = useState("");
   const [omschrijving, setOmschrijving] = useState("");
-  const [aanwezigeId, setAanwezigeId] = useState("");
+  const [deelnemerId, setDeelnemerId] = useState("");
   const [deadline, setDeadline] = useState(() => {
     const morgen = new Date();
     morgen.setDate(morgen.getDate() + 1);
@@ -47,8 +47,8 @@ export default function NieuwNokPuntPagina({
       .then((r) => r.json())
       .then((data) => {
         setVerslag(data);
-        if (data.aanwezigen?.length > 0) {
-          setAanwezigeId(data.aanwezigen[0].id);
+        if (data.deelnemers?.length > 0) {
+          setDeelnemerId(data.deelnemers[0].id);
         }
       })
       .finally(() => setLaden(false));
@@ -74,14 +74,8 @@ export default function NieuwNokPuntPagina({
 
   async function opslaan(e: React.FormEvent) {
     e.preventDefault();
-    if (!aanwezigeId) {
+    if (!deelnemerId) {
       setFout("Kies een verantwoordelijke.");
-      return;
-    }
-
-    const gekozenAanwezige = verslag?.aanwezigen.find((a) => a.id === aanwezigeId);
-    if (!gekozenAanwezige) {
-      setFout("Verantwoordelijke niet gevonden.");
       return;
     }
 
@@ -94,9 +88,8 @@ export default function NieuwNokPuntPagina({
 
     const fd = new FormData();
     fd.append("titel", titel);
-    fd.append("discipline", gekozenAanwezige.discipline);
     fd.append("omschrijving", omschrijving);
-    fd.append("aanwezigeId", aanwezigeId);
+    fd.append("deelnemerId", deelnemerId);
     fd.append("deadline", deadline);
     fotos.forEach((f) => fd.append("fotos", f));
 
@@ -114,7 +107,7 @@ export default function NieuwNokPuntPagina({
     }
   }
 
-  const gekozenAanwezige = verslag?.aanwezigen.find((a) => a.id === aanwezigeId);
+  const gekozenDeelnemer = verslag?.deelnemers.find((d) => d.id === deelnemerId);
 
   if (laden) {
     return (
@@ -142,7 +135,7 @@ export default function NieuwNokPuntPagina({
         ← Terug naar project
       </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900">{verslag.naam}</h1>
+      <h1 className="text-2xl font-bold text-gray-900">{verslag.projectNaam}</h1>
       <p className="text-sm text-gray-500 mb-6">NOK-punt toevoegen</p>
 
       <form onSubmit={opslaan} className="flex flex-col gap-6">
@@ -235,27 +228,26 @@ export default function NieuwNokPuntPagina({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Verantwoordelijke <span className="text-red-500">*</span>
             </label>
-            {verslag.aanwezigen.length === 0 ? (
+            {verslag.deelnemers.length === 0 ? (
               <p className="text-sm text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-                Geen aanwezigen toegevoegd aan dit verslag. Voeg eerst aanwezigen
-                toe via de verslagdetails.
+                Dit project heeft nog geen deelnemers. Voeg ze toe via het project.
               </p>
             ) : (
               <>
                 <select
-                  value={aanwezigeId}
-                  onChange={(e) => setAanwezigeId(e.target.value)}
+                  value={deelnemerId}
+                  onChange={(e) => setDeelnemerId(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {verslag.aanwezigen.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.naam} — {a.discipline}
+                  {verslag.deelnemers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.naam} — {d.discipline}
                     </option>
                   ))}
                 </select>
-                {gekozenAanwezige && (
+                {gekozenDeelnemer && (
                   <p className="text-xs text-gray-400 mt-1 px-1">
-                    {gekozenAanwezige.email}
+                    {gekozenDeelnemer.email}
                   </p>
                 )}
               </>
@@ -288,7 +280,7 @@ export default function NieuwNokPuntPagina({
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={bezig || verslag.aanwezigen.length === 0}
+            disabled={bezig || verslag.deelnemers.length === 0}
             className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {bezig ? "Bezig met opslaan..." : "Opslaan"}

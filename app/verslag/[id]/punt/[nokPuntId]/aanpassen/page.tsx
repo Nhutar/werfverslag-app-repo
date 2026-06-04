@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-interface Aanwezige {
+interface Deelnemer {
   id: string;
   naam: string;
   discipline: string;
@@ -21,11 +21,11 @@ export default function NokPuntAanpassenPagina({
 
   const [laden, setLaden] = useState(true);
   const [verslagNaam, setVerslagNaam] = useState("");
-  const [aanwezigen, setAanwezigen] = useState<Aanwezige[]>([]);
+  const [deelnemers, setDeelnemers] = useState<Deelnemer[]>([]);
 
   const [titel, setTitel] = useState("");
   const [omschrijving, setOmschrijving] = useState("");
-  const [aanwezigeId, setAanwezigeId] = useState("");
+  const [deelnemerId, setDeelnemerId] = useState("");
   const [deadline, setDeadline] = useState("");
   const [bestaandeFotoUrls, setBestaandeFotoUrls] = useState<string[]>([]);
   const [nieuweFotos, setNieuweFotos] = useState<File[]>([]);
@@ -39,17 +39,17 @@ export default function NokPuntAanpassenPagina({
       .then((r) => r.json())
       .then((data) => {
         setVerslagNaam(data.verslagNaam ?? "");
-        setAanwezigen(data.aanwezigen ?? []);
+        setDeelnemers(data.deelnemers ?? []);
         setTitel(data.titel ?? "");
         setOmschrijving(data.omschrijving ?? "");
         setDeadline(data.deadline ?? "");
         setBestaandeFotoUrls(data.fotoUrls ?? []);
 
-        // Zoek de aanwezige die overeenkomt met de huidige verantwoordelijke
-        const match = (data.aanwezigen ?? []).find(
-          (a: Aanwezige) => a.email === data.verantwoordelijkeEmail
+        // Zoek de deelnemer die overeenkomt met de huidige verantwoordelijke
+        const match = (data.deelnemers ?? []).find(
+          (d: Deelnemer) => d.email === data.verantwoordelijkeEmail
         );
-        setAanwezigeId(match?.id ?? (data.aanwezigen?.[0]?.id ?? ""));
+        setDeelnemerId(match?.id ?? (data.deelnemers?.[0]?.id ?? ""));
       })
       .finally(() => setLaden(false));
   }, [params.nokPuntId]);
@@ -78,7 +78,7 @@ export default function NokPuntAanpassenPagina({
 
   async function opslaan(e: React.FormEvent) {
     e.preventDefault();
-    if (!aanwezigeId) {
+    if (!deelnemerId) {
       setFout("Kies een verantwoordelijke.");
       return;
     }
@@ -88,7 +88,7 @@ export default function NokPuntAanpassenPagina({
     const fd = new FormData();
     fd.append("titel", titel);
     fd.append("omschrijving", omschrijving);
-    fd.append("aanwezigeId", aanwezigeId);
+    fd.append("deelnemerId", deelnemerId);
     fd.append("deadline", deadline);
     fd.append("bestaandeFotoUrls", JSON.stringify(bestaandeFotoUrls));
     nieuweFotos.forEach((f) => fd.append("fotos", f));
@@ -107,7 +107,7 @@ export default function NokPuntAanpassenPagina({
     }
   }
 
-  const gekozenAanwezige = aanwezigen.find((a) => a.id === aanwezigeId);
+  const gekozenDeelnemer = deelnemers.find((d) => d.id === deelnemerId);
   const totaalFotos = bestaandeFotoUrls.length + nieuweFotos.length;
 
   if (laden) {
@@ -242,26 +242,26 @@ export default function NokPuntAanpassenPagina({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Verantwoordelijke <span className="text-red-500">*</span>
             </label>
-            {aanwezigen.length === 0 ? (
+            {deelnemers.length === 0 ? (
               <p className="text-sm text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2">
-                Geen aanwezigen beschikbaar.
+                Geen deelnemers beschikbaar.
               </p>
             ) : (
               <>
                 <select
-                  value={aanwezigeId}
-                  onChange={(e) => setAanwezigeId(e.target.value)}
+                  value={deelnemerId}
+                  onChange={(e) => setDeelnemerId(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {aanwezigen.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.naam} — {a.discipline}
+                  {deelnemers.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.naam} — {d.discipline}
                     </option>
                   ))}
                 </select>
-                {gekozenAanwezige && (
+                {gekozenDeelnemer && (
                   <p className="text-xs text-gray-400 mt-1 px-1">
-                    {gekozenAanwezige.email}
+                    {gekozenDeelnemer.email}
                   </p>
                 )}
               </>

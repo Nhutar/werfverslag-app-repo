@@ -12,7 +12,11 @@ export async function POST(
 
   const verslag = await prisma.werfverslag.findUnique({
     where: { id: verslagId },
-    include: { aanwezigen: true, nokPunten: true },
+    include: {
+      project: true,
+      aanwezigen: { include: { projectDeelnemer: true } },
+      nokPunten: true,
+    },
   });
   if (!verslag) {
     return NextResponse.json({ error: "Verslag niet gevonden" }, { status: 404 });
@@ -26,8 +30,11 @@ export async function POST(
     return NextResponse.json({ error: "Geen modus opgegeven" }, { status: 400 });
   }
 
-  // Bepaal de ontvangers op basis van de modus
-  let ontvangers = verslag.aanwezigen;
+  // Aanwezigen van dit verslag (projectdeelnemers die aangevinkt zijn)
+  let ontvangers = verslag.aanwezigen.map((a) => ({
+    naam: a.projectDeelnemer.naam,
+    email: a.projectDeelnemer.email,
+  }));
 
   if (modus === "openstaand") {
     const openEmails = new Set(
@@ -93,10 +100,10 @@ export async function POST(
       const { error } = await resend.emails.send({
         from: VAN_ADRES,
         to: ontvanger.email,
-        subject: `Werfverslag — ${verslag.naam}`,
+        subject: `Werfverslag — ${verslag.project.naam}`,
         react: NotificatieEmail({
           verantwoordelijkeNaam: ontvanger.naam,
-          werfnaam: verslag.naam,
+          werfnaam: verslag.project.naam,
           punten: eigenPunten,
           link,
         }),
