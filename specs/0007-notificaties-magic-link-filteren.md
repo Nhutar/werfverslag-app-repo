@@ -4,7 +4,7 @@ id: "0007"
 slug: notificaties-magic-link-filteren
 title: "Notificaties versturen, magic link en filteren/sorteren"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
