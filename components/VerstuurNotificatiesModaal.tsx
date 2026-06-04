@@ -54,6 +54,9 @@ export function VerstuurNotificatiesModaal({
     if (res.ok) {
       const data = await res.json();
       setResultaat(`${data.verstuurd} e-mail${data.verstuurd === 1 ? "" : "s"} verstuurd.`);
+      if (data.fouten && data.fouten.length > 0) {
+        setFout("Niet alles is gelukt:\n" + data.fouten.join("\n"));
+      }
     } else {
       const data = await res.json().catch(() => ({}));
       setFout(data.error ?? "Er is iets misgegaan.");
@@ -76,8 +79,13 @@ export function VerstuurNotificatiesModaal({
 
         {resultaat ? (
           <div className="text-center py-6">
-            <p className="text-3xl mb-2">✅</p>
+            <p className="text-3xl mb-2">{fout ? "⚠️" : "✅"}</p>
             <p className="text-green-700 font-medium">{resultaat}</p>
+            {fout && (
+              <p className="text-sm text-red-600 mt-3 whitespace-pre-line text-left bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {fout}
+              </p>
+            )}
             <button
               onClick={onSluit}
               className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"

@@ -47,6 +47,7 @@ export async function POST(
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
   let verstuurd = 0;
+  const fouten: string[] = [];
 
   for (const ontvanger of ontvangers) {
     // Token aanmaken
@@ -79,7 +80,7 @@ export async function POST(
       }));
 
     try {
-      await resend.emails.send({
+      const { error } = await resend.emails.send({
         from: VAN_ADRES,
         to: ontvanger.email,
         subject: `Werfverslag — ${verslag.naam}`,
@@ -90,11 +91,18 @@ export async function POST(
           link,
         }),
       });
-      verstuurd++;
+
+      if (error) {
+        console.error("Resend-fout voor", ontvanger.email, error);
+        fouten.push(`${ontvanger.email}: ${error.message ?? "onbekende fout"}`);
+      } else {
+        verstuurd++;
+      }
     } catch (e) {
       console.error("Fout bij versturen naar", ontvanger.email, e);
+      fouten.push(`${ontvanger.email}: ${e instanceof Error ? e.message : "onbekende fout"}`);
     }
   }
 
-  return NextResponse.json({ verstuurd });
+  return NextResponse.json({ verstuurd, fouten });
 }
