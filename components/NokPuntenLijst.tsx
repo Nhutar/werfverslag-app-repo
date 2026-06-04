@@ -29,12 +29,30 @@ function NokPuntKaart({
   punt,
   onVerwijder,
   onBekijk,
+  verantwoordelijkeModus,
 }: {
   punt: NokPuntData;
   onVerwijder: (punt: NokPuntData) => void;
   onBekijk: (punt: NokPuntData) => void;
+  verantwoordelijkeModus: boolean;
 }) {
   const router = useRouter();
+
+  const menuOpties = verantwoordelijkeModus
+    ? [{ label: "Bekijk", onClick: () => onBekijk(punt) }]
+    : [
+        { label: "Bekijk", onClick: () => onBekijk(punt) },
+        {
+          label: "Aanpassen",
+          onClick: () =>
+            router.push(`/verslag/${punt.verslagId}/punt/${punt.id}/aanpassen`),
+        },
+        {
+          label: "Verwijderen",
+          onClick: () => onVerwijder(punt),
+          gevaarlijk: true,
+        },
+      ];
   const status = berekenStatus(new Date(punt.deadline), punt.status);
   const deadline = new Date(punt.deadline).toLocaleDateString("nl-BE", {
     day: "numeric",
@@ -51,24 +69,7 @@ function NokPuntKaart({
             {punt.discipline}
           </span>
         </div>
-        <DrieKnopjesMenu
-          opties={[
-            {
-              label: "Bekijk",
-              onClick: () => onBekijk(punt),
-            },
-            {
-              label: "Aanpassen",
-              onClick: () =>
-                router.push(`/verslag/${punt.verslagId}/punt/${punt.id}/aanpassen`),
-            },
-            {
-              label: "Verwijderen",
-              onClick: () => onVerwijder(punt),
-              gevaarlijk: true,
-            },
-          ]}
-        />
+        <DrieKnopjesMenu opties={menuOpties} />
       </div>
       <p className="text-sm font-medium text-gray-800 mb-2">
         {punt.titel || <span className="text-gray-400 italic">(geen titel)</span>}
@@ -112,7 +113,13 @@ function NokPuntKaart({
   );
 }
 
-export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
+export function NokPuntenLijst({
+  punten,
+  verantwoordelijkeModus = false,
+}: {
+  punten: NokPuntData[];
+  verantwoordelijkeModus?: boolean;
+}) {
   const router = useRouter();
   const [opgelostOpen, setOpgelostOpen] = useState(false);
   const [teVerwijderen, setTeVerwijderen] = useState<NokPuntData | null>(null);
@@ -140,7 +147,7 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
     <>
       <div className="flex flex-col gap-3">
         {openPunten.map((punt) => (
-          <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} />
+          <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} verantwoordelijkeModus={verantwoordelijkeModus} />
         ))}
 
         {openPunten.length === 0 && opgelostePunten.length > 0 && (
@@ -163,7 +170,7 @@ export function NokPuntenLijst({ punten }: { punten: NokPuntData[] }) {
             {opgelostOpen && (
               <div className="flex flex-col gap-3 mt-3">
                 {opgelostePunten.map((punt) => (
-                  <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} />
+                  <NokPuntKaart key={punt.id} punt={punt} onVerwijder={setTeVerwijderen} onBekijk={bekijk} verantwoordelijkeModus={verantwoordelijkeModus} />
                 ))}
               </div>
             )}

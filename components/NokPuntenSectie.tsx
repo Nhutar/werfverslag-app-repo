@@ -28,6 +28,7 @@ export function NokPuntenSectie({
   punten,
   aanwezigen,
   initieleVerantwoordelijke,
+  verantwoordelijkeModus = false,
   kopInhoud,
 }: {
   verslagId: string;
@@ -35,6 +36,7 @@ export function NokPuntenSectie({
   punten: NokPuntData[];
   aanwezigen: AanwezigeData[];
   initieleVerantwoordelijke: string; // email of ""
+  verantwoordelijkeModus?: boolean;
   kopInhoud: ReactNode;
 }) {
   // Verantwoordelijken die effectief op punten voorkomen (naam, uniek)
@@ -116,21 +118,30 @@ export function NokPuntenSectie({
             NOK-punten{" "}
             <span className="text-gray-400 font-normal text-sm">({punten.length})</span>
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setNotificatiesOpen(true)}
-              className="inline-flex items-center gap-1 bg-white border border-blue-200 text-blue-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
-            >
-              ✉ Verstuur notificaties
-            </button>
-            <Link
-              href={`/verslag/${verslagId}/nieuw-punt`}
-              className="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              + NOK-punt
-            </Link>
-          </div>
+          {!verantwoordelijkeModus && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setNotificatiesOpen(true)}
+                className="inline-flex items-center gap-1 bg-white border border-blue-200 text-blue-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors"
+              >
+                ✉ Verstuur notificaties
+              </button>
+              <Link
+                href={`/verslag/${verslagId}/nieuw-punt`}
+                className="inline-flex items-center gap-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                + NOK-punt
+              </Link>
+            </div>
+          )}
         </div>
+
+        {/* Melding in verantwoordelijke-modus */}
+        {verantwoordelijkeModus && (
+          <p className="text-xs text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 mt-3">
+            Je bekijkt dit als verantwoordelijke. Je kan je punten bekijken en afvinken.
+          </p>
+        )}
 
         {/* Filterbalk */}
         {punten.length > 0 && (
@@ -205,7 +216,7 @@ export function NokPuntenSectie({
             Geen NOK-punten voor deze filter.
           </p>
         ) : (
-          <NokPuntenLijst punten={zichtbarePunten} />
+          <NokPuntenLijst punten={zichtbarePunten} verantwoordelijkeModus={verantwoordelijkeModus} />
         )}
       </div>
 

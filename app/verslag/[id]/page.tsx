@@ -12,8 +12,9 @@ export default async function VerslagDetailPagina({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { verantwoordelijke?: string };
+  searchParams: { verantwoordelijke?: string; modus?: string };
 }) {
+  const verantwoordelijkeModus = searchParams.modus === "afvinken";
   const verslag = await prisma.werfverslag.findUnique({
     where: { id: params.id },
     include: {
@@ -75,7 +76,10 @@ export default async function VerslagDetailPagina({
         {verslag.aanwezigen.length > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <p className="text-xs font-medium text-gray-500 mb-1">Aanwezigen</p>
-            <AanwezigenBeheer aanwezigen={aanwezigenData} />
+            <AanwezigenBeheer
+              aanwezigen={aanwezigenData}
+              verantwoordelijkeModus={verantwoordelijkeModus}
+            />
           </div>
         )}
       </div>
@@ -90,6 +94,7 @@ export default async function VerslagDetailPagina({
         punten={puntenData}
         aanwezigen={aanwezigenData}
         initieleVerantwoordelijke={searchParams.verantwoordelijke ?? ""}
+        verantwoordelijkeModus={verantwoordelijkeModus}
         kopInhoud={kopInhoud}
       />
     </div>

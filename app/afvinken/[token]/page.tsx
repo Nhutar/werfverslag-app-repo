@@ -32,6 +32,6 @@ export default async function AfvinkenPagina({
   redirect(
     `/verslag/${magicLink.werfverslagId}?verantwoordelijke=${encodeURIComponent(
       magicLink.verantwoordelijkeEmail
-    )}`
+    )}&modus=afvinken`
   );
 }

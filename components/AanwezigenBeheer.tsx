@@ -13,7 +13,13 @@ interface Aanwezige {
   email: string;
 }
 
-export function AanwezigenBeheer({ aanwezigen }: { aanwezigen: Aanwezige[] }) {
+export function AanwezigenBeheer({
+  aanwezigen,
+  verantwoordelijkeModus = false,
+}: {
+  aanwezigen: Aanwezige[];
+  verantwoordelijkeModus?: boolean;
+}) {
   const router = useRouter();
   const [teVerwijderen, setTeVerwijderen] = useState<Aanwezige | null>(null);
   const [teAanpassen, setTeAanpassen] = useState<Aanwezige | null>(null);
@@ -73,12 +79,14 @@ export function AanwezigenBeheer({ aanwezigen }: { aanwezigen: Aanwezige[] }) {
               <span className="font-medium">{a.naam}</span>{" "}
               <span className="text-gray-400">— {a.discipline}</span>
             </p>
-            <DrieKnopjesMenu
-              opties={[
-                { label: "Aanpassen", onClick: () => openAanpassen(a) },
-                { label: "Verwijderen", onClick: () => setTeVerwijderen(a), gevaarlijk: true },
-              ]}
-            />
+            {!verantwoordelijkeModus && (
+              <DrieKnopjesMenu
+                opties={[
+                  { label: "Aanpassen", onClick: () => openAanpassen(a) },
+                  { label: "Verwijderen", onClick: () => setTeVerwijderen(a), gevaarlijk: true },
+                ]}
+              />
+            )}
           </div>
         ))}
       </div>

@@ -5,6 +5,18 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-06-04
+
+### Added
+- Spec 0008: Verantwoordelijke-modus via magic link (kijk-en-afvink)
+- Magic link opent de verslagpagina met `&modus=afvinken`
+- In deze modus verborgen: "+ NOK-punt", "Verstuur notificaties", aanpassen/verwijderen op punten en aanwezigen
+- Behouden: filteren/sorteren, "Bekijk" en "Markeer als opgelost"
+- Subtiele melding "Je bekijkt dit als verantwoordelijke"
+
+### Changed
+- Verslagmaker die zelf op verantwoordelijke filtert behoudt alle knoppen (modus enkel via magic link)
+
 ## [0.7.0] — 2026-06-04
 
 ### Added
