@@ -4,7 +4,7 @@ id: "0005"
 slug: aanpassen-verwijderen
 title: "Aanpassen en verwijderen via 3-puntjes menu"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
