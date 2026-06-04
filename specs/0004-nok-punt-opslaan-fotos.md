@@ -4,7 +4,7 @@ id: "0004"
 slug: nok-punt-opslaan-fotos
 title: "NOK-punt opslaan + foto's"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
