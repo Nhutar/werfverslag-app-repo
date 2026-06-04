@@ -5,6 +5,17 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-06-04
+
+### Added
+- Spec 0006: Titel-veld op NOK-punt (verplicht, max 80 tekens)
+- Omschrijving van NOK-punt is nu optioneel
+- NOK-punt kaart toont enkel de titel (geen lange tekst meer)
+- "Bekijk" optie in 3-puntjes menu van NOK-punt → modaal met alle details
+- "Markeer als opgelost" knop in het bekijk-modaal met naam, omschrijving en foto van de oplossing
+- POST /api/nok-punten/[id]/opgelost endpoint
+- Database migratie: titel (verplicht) + omschrijving optioneel op nok_punt
+
 ## [0.5.0] — 2026-06-04
 
 ### Added

@@ -29,6 +29,7 @@ export default function NieuwNokPuntPagina({
   const [verslag, setVerslag] = useState<VerslagInfo | null>(null);
   const [laden, setLaden] = useState(true);
 
+  const [titel, setTitel] = useState("");
   const [omschrijving, setOmschrijving] = useState("");
   const [aanwezigeId, setAanwezigeId] = useState("");
   const [deadline, setDeadline] = useState(() => {
@@ -86,10 +87,15 @@ export default function NieuwNokPuntPagina({
       return;
     }
 
+    if (!titel.trim()) {
+      setFout("Titel is verplicht.");
+      return;
+    }
     setBezig(true);
     setFout(null);
 
     const fd = new FormData();
+    fd.append("titel", titel);
     fd.append("discipline", gekozenAanwezige.discipline);
     fd.append("omschrijving", omschrijving);
     fd.append("aanwezigeId", aanwezigeId);
@@ -143,17 +149,31 @@ export default function NieuwNokPuntPagina({
 
       <form onSubmit={opslaan} className="flex flex-col gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4">
+          {/* Titel */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Titel <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={titel}
+              onChange={(e) => setTitel(e.target.value)}
+              placeholder="bv. Raam niet waterdicht"
+              maxLength={80}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           {/* Omschrijving */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Omschrijving <span className="text-red-500">*</span>
+              Omschrijving
             </label>
             <textarea
-              required
               rows={3}
               value={omschrijving}
               onChange={(e) => setOmschrijving(e.target.value)}
-              placeholder="Beschrijf het NOK-punt..."
+              placeholder="Optionele details..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>

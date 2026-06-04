@@ -25,6 +25,7 @@ export default function NokPuntAanpassenPagina({
   const [verslagNaam, setVerslagNaam] = useState("");
   const [aanwezigen, setAanwezigen] = useState<Aanwezige[]>([]);
 
+  const [titel, setTitel] = useState("");
   const [omschrijving, setOmschrijving] = useState("");
   const [aanwezigeId, setAanwezigeId] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -41,6 +42,7 @@ export default function NokPuntAanpassenPagina({
       .then((data) => {
         setVerslagNaam(data.verslagNaam ?? "");
         setAanwezigen(data.aanwezigen ?? []);
+        setTitel(data.titel ?? "");
         setOmschrijving(data.omschrijving ?? "");
         setDeadline(data.deadline ?? "");
         setBestaandeFotoUrls(data.fotoUrls ?? []);
@@ -86,6 +88,7 @@ export default function NokPuntAanpassenPagina({
     setFout(null);
 
     const fd = new FormData();
+    fd.append("titel", titel);
     fd.append("omschrijving", omschrijving);
     fd.append("aanwezigeId", aanwezigeId);
     fd.append("deadline", deadline);
@@ -131,16 +134,30 @@ export default function NokPuntAanpassenPagina({
 
       <form onSubmit={opslaan} className="flex flex-col gap-6">
         <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4">
+          {/* Titel */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Titel <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={titel}
+              onChange={(e) => setTitel(e.target.value)}
+              maxLength={80}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           {/* Omschrijving */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Omschrijving <span className="text-red-500">*</span>
+              Omschrijving
             </label>
             <textarea
-              required
               rows={3}
               value={omschrijving}
               onChange={(e) => setOmschrijving(e.target.value)}
+              placeholder="Optionele details..."
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>

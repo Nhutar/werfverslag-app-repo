@@ -26,12 +26,13 @@ export async function POST(
     return NextResponse.json({ error: "Ongeldig formulier" }, { status: 400 });
   }
 
+  const titel = formData.get("titel") as string | null;
   const discipline = formData.get("discipline") as string | null;
   const omschrijving = formData.get("omschrijving") as string | null;
   const aanwezigeId = formData.get("aanwezigeId") as string | null;
   const deadlineStr = formData.get("deadline") as string | null;
 
-  if (!discipline || !omschrijving || !aanwezigeId || !deadlineStr) {
+  if (!titel || !discipline || !aanwezigeId || !deadlineStr) {
     return NextResponse.json({ error: "Verplichte velden ontbreken" }, { status: 400 });
   }
 
@@ -88,8 +89,9 @@ export async function POST(
     data: {
       id: nokPuntId,
       werfverslagId: verslagId,
+      titel: titel!,
       discipline,
-      omschrijving,
+      omschrijving: omschrijving || null,
       verantwoordelijkeNaam: aanwezige.naam,
       verantwoordelijkeEmail: aanwezige.email,
       deadline,
