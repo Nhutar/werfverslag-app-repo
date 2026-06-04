@@ -5,6 +5,20 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-06-04
+
+### Added
+- Spec 0005: 3-puntjes menu (⋯) op werfverslag-kaarten, aanwezigen en NOK-punten
+- Werfverslag aanpassen: nieuwe pagina `/verslag/[id]/aanpassen` (naam, verslaggever, datum, werfadres)
+- Aanwezige aanpassen: modaal op de detailpagina (naam, discipline, e-mail)
+- NOK-punt aanpassen: nieuwe pagina `/verslag/[id]/punt/[nokPuntId]/aanpassen` (omschrijving, verantwoordelijke, deadline, foto's)
+- Foto's aanpassen: bestaande foto's individueel verwijderen, nieuwe toevoegen (tot max 5)
+- Verwijderen met bevestigingsdialoog op alle drie plaatsen
+- Extra waarschuwing bij verwijderen van verslag met NOK-punten
+- Cascade verwijdering: foto's, tokens en punten worden mee verwijderd
+- Herbruikbare componenten: DrieKnopjesMenu, BevestigingDialog, VerslagKaartLijst, AanwezigenBeheer
+- API routes: PATCH + DELETE voor verslagen, aanwezigen en NOK-punten
+
 ## [0.4.1] — 2026-06-04
 
 ### Changed

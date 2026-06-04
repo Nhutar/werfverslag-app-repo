@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { NokPuntenLijst, NokPuntData } from "@/components/NokPuntenLijst";
+import { AanwezigenBeheer } from "@/components/AanwezigenBeheer";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function VerslagDetailPagina({
     opgelostOp: p.opgelostOp ? p.opgelostOp.toISOString() : null,
     opgelostDoorNaam: p.opgelostDoorNaam,
     fotoUrls: p.fotoUrls,
+    verslagId: verslag.id,
   }));
 
   return (
@@ -65,14 +67,7 @@ export default async function VerslagDetailPagina({
               <p className="text-xs font-medium text-gray-500 mb-1">
                 Aanwezigen
               </p>
-              <div className="flex flex-col gap-1">
-                {verslag.aanwezigen.map((a) => (
-                  <p key={a.id} className="text-sm text-gray-600">
-                    <span className="font-medium">{a.naam}</span>{" "}
-                    <span className="text-gray-400">— {a.discipline}</span>
-                  </p>
-                ))}
-              </div>
+              <AanwezigenBeheer aanwezigen={verslag.aanwezigen} />
             </div>
           )}
         </div>
@@ -85,14 +80,7 @@ export default async function VerslagDetailPagina({
         {verslag.aanwezigen.length > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-100">
             <p className="text-xs font-medium text-gray-500 mb-1">Aanwezigen</p>
-            <div className="flex flex-col gap-1">
-              {verslag.aanwezigen.map((a) => (
-                <p key={a.id} className="text-sm text-gray-600">
-                  <span className="font-medium">{a.naam}</span>{" "}
-                  <span className="text-gray-400">— {a.discipline}</span>
-                </p>
-              ))}
-            </div>
+            <AanwezigenBeheer aanwezigen={verslag.aanwezigen} />
           </div>
         )}
       </div>
