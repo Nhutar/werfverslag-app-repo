@@ -4,7 +4,7 @@ id: "0009"
 slug: projectlaag-dashboards
 title: "Projectlaag: dashboards, projectdeelnemers en de omkering"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
