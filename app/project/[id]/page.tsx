@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { berekenStatus, NokStatus } from "@/lib/status";
 import { WerfverslagKaartLijst } from "@/components/WerfverslagKaartLijst";
+import { StatusLegende } from "@/components/StatusLegende";
 
 export const dynamic = "force-dynamic";
 
@@ -105,7 +106,12 @@ export default async function ProjectDashboard({
           <p className="text-gray-400 text-sm mt-1">Maak een werfverslag aan voor dit project.</p>
         </div>
       ) : (
-        <WerfverslagKaartLijst verslagen={verslagenData} />
+        <>
+          <WerfverslagKaartLijst verslagen={verslagenData} />
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <StatusLegende />
+          </div>
+        </>
       )}
     </div>
   );
