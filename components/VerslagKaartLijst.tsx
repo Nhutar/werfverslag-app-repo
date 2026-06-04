@@ -45,8 +45,8 @@ export function VerslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[] }) 
                 <p className="text-xs text-gray-400 mt-0.5 truncate">{verslag.werfadres}</p>
               </div>
 
-              {/* Puntenteller onderaan */}
-              <div className="flex gap-3 mt-3 flex-wrap">
+              {/* Puntenteller onderaan rechts */}
+              <div className="flex gap-3 mt-3 flex-wrap justify-end">
                 {(["voorbij-deadline", "bijna-deadline", "open", "opgelost"] as NokStatus[]).map(
                   (s) =>
                     verslag.tellers[s] > 0 && (
