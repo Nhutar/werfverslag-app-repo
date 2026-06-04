@@ -5,6 +5,25 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-06-04
+
+### Added
+- Spec 0007 ⭐ (kernfeature): E-mailnotificaties via Resend + React Email
+- "Verstuur notificaties" knop met 3 modi: alle aanwezigen / openstaande punten / specifieke personen
+- Magic link per verantwoordelijke → opent verslagpagina voorgefilterd op zijn naam
+- Filteren op verantwoordelijke, status en discipline + sorteren op urgentie/toegevoegd
+- E-mailtemplate met de openstaande NOK-punten van de ontvanger
+- POST /api/verslagen/[id]/notificaties endpoint
+- lib/tokens.ts en lib/resend.ts helpers
+
+### Changed
+- MagicLinkToken model: nu per verslag + verantwoordelijke (i.p.v. per NOK-punt)
+- /afvinken/[token] is nu een redirect naar de voorgefilterde verslagpagina
+- Verslag-detailpagina herwerkt met filterbalk in de sticky kop
+
+### Removed
+- Relatie NokPunt.magicLinkTokens (tokens hangen niet meer aan een individueel punt)
+
 ## [0.6.0] — 2026-06-04
 
 ### Added

@@ -175,7 +175,6 @@ export async function DELETE(
     }
   }
 
-  await prisma.magicLinkToken.deleteMany({ where: { nokPuntId: params.id } });
   await prisma.nokPunt.delete({ where: { id: params.id } });
 
   return NextResponse.json({ ok: true });
