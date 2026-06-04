@@ -4,7 +4,7 @@ id: "0008"
 slug: verantwoordelijke-modus
 title: "Verantwoordelijke-modus via magic link (kijk-en-afvink)"
 type: feature
-status: queued
+status: deployed
 created: 2026-06-04
 ---
 
