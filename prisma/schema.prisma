@@ -15,6 +15,7 @@ model Werfverslag {
   aangemaaktOp DateTime    @default(now()) @map("aangemaakt_op")
   nokPunten    NokPunt[]
   aanwezigen   Aanwezige[]
+  magicLinkTokens MagicLinkToken[]
 
   @@map("werfverslag")
 }
@@ -47,18 +48,19 @@ model NokPunt {
   oplossingOmschrijving   String?          @map("oplossing_omschrijving")
   oplossingFotoUrl        String?          @map("oplossing_foto_url")
   aangemaaktOp            DateTime         @default(now()) @map("aangemaakt_op")
-  magicLinkTokens         MagicLinkToken[]
 
   @@map("nok_punt")
 }
 
 model MagicLinkToken {
-  id           String   @id @default(uuid())
-  nokPuntId    String   @map("nok_punt_id")
-  nokPunt      NokPunt  @relation(fields: [nokPuntId], references: [id])
-  token        String   @unique
-  vervalOp     DateTime @map("vervalt_op")
-  aangemaaktOp DateTime @default(now()) @map("aangemaakt_op")
+  id                     String      @id @default(uuid())
+  token                  String      @unique
+  werfverslagId          String      @map("werfverslag_id")
+  werfverslag            Werfverslag @relation(fields: [werfverslagId], references: [id])
+  verantwoordelijkeEmail String      @map("verantwoordelijke_email")
+  verantwoordelijkeNaam  String      @map("verantwoordelijke_naam")
+  vervalOp               DateTime    @map("vervalt_op")
+  aangemaaktOp           DateTime    @default(now()) @map("aangemaakt_op")
 
   @@map("magic_link_token")
 }

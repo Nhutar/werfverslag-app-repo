@@ -76,7 +76,7 @@ export async function DELETE(
 
   // Cascade verwijdering via Prisma (tokens → punten → aanwezigen → verslag)
   await prisma.magicLinkToken.deleteMany({
-    where: { nokPunt: { werfverslagId: verslagId } },
+    where: { werfverslagId: verslagId },
   });
   await prisma.nokPunt.deleteMany({ where: { werfverslagId: verslagId } });
   await prisma.aanwezige.deleteMany({ where: { werfverslagId: verslagId } });
