@@ -17,9 +17,28 @@ export async function PATCH(
     return NextResponse.json({ error: "Ongeldige discipline" }, { status: 400 });
   }
 
+  // Oude gegevens ophalen om bijhorende NOK-punten mee te kunnen bijwerken
+  const oud = await prisma.aanwezige.findUnique({ where: { id: params.id } });
+  if (!oud) {
+    return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
+  }
+
   const aanwezige = await prisma.aanwezige.update({
     where: { id: params.id },
     data: { naam, discipline, email },
+  });
+
+  // Houd de verantwoordelijke-gegevens op de NOK-punten van dit verslag in sync.
+  // Match op het oude e-mailadres binnen hetzelfde verslag.
+  await prisma.nokPunt.updateMany({
+    where: {
+      werfverslagId: oud.werfverslagId,
+      verantwoordelijkeEmail: oud.email,
+    },
+    data: {
+      verantwoordelijkeNaam: naam,
+      verantwoordelijkeEmail: email,
+    },
   });
 
   return NextResponse.json({ id: aanwezige.id });
