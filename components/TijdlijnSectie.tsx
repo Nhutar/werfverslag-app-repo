@@ -56,6 +56,8 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
           }
           return true;
         })
+        // Stabiele volgorde op ID zodat boven/onder positie niet wijzigt na refresh
+        .sort((a, b) => a.id.localeCompare(b.id))
         .map((p) => ({ id: p.id, titel: p.titel, deadline: p.deadline, status: p.status, verslagId: p.verslagId, verslagDatum: v.datum })),
     }));
   }, [verslagen, filterVerantwoordelijke, filterStatus, filterDiscipline]);
