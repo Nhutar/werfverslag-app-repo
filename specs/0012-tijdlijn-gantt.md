@@ -2,7 +2,7 @@
 id: "0012"
 title: Tijdlijn (Gantt)
 slug: tijdlijn-gantt
-status: queued
+status: deployed
 ---
 
 ## Doel
