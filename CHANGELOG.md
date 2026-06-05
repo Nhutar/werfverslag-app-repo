@@ -5,6 +5,15 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-06-05
+
+### Added
+- Gantt: NOK-blokje horizontaal slepen = deadline wijzigen (enkel verslaggever)
+- Datum-tooltip boven blokje tijdens slepen
+- Blauwe rand op actief sleepblokje
+- Minimum deadline = verslagdatum (kan niet eerder gesleept worden)
+- Foutmelding bij mislukte API-update + automatisch terug naar originele positie
+
 ## [0.13.0] — 2026-06-05
 
 ### Changed
