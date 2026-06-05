@@ -2,7 +2,7 @@
 id: "0015"
 title: Opmerkingen, chat & layout herwerking
 slug: opmerkingen-chat-layout
-status: queued
+status: deployed
 ---
 
 ## Doel
