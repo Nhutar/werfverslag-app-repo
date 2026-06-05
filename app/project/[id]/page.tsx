@@ -62,8 +62,14 @@ export default async function ProjectDashboard({
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
         <h1 className="text-xl font-bold text-gray-900">{project.naam}</h1>
         <p className="text-sm text-gray-500 mt-0.5">{project.werfadres}</p>
-        {project.bouwheer && (
-          <p className="text-sm text-gray-500 mt-0.5">Bouwheer: {project.bouwheer}</p>
+        {(project.bouwheer || project.bouwheerBedrijf) && (
+          <div className="mt-2">
+            <p className="text-xs font-medium text-gray-400">Bouwheer</p>
+            {project.bouwheer && <p className="text-sm text-gray-600">{project.bouwheer}</p>}
+            {project.bouwheerBedrijf && <p className="text-sm text-gray-500">{project.bouwheerBedrijf}</p>}
+            {project.bouwheerEmail && <p className="text-xs text-gray-400">{project.bouwheerEmail}</p>}
+            {project.bouwheerTelefoon && <p className="text-xs text-gray-400">{project.bouwheerTelefoon}</p>}
+          </div>
         )}
         {project.beschrijving && (
           <p className="text-sm text-gray-400 mt-2">{project.beschrijving}</p>

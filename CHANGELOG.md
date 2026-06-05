@@ -5,6 +5,17 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.11.0] — 2026-06-05
+
+### Added
+- Adressenboek: gedeeld overzicht van professionele contactpersonen (/adressenboek)
+- CRUD voor contacten: nieuw aanmaken, aanpassen, verwijderen
+- Automatisch opslaan van nieuwe projectdeelnemers in het adressenboek (op e-mail)
+- Zoeken en selecteren van bestaande contacten bij toevoegen aan project
+- Synchronisatie: wijzigingen in adressenboek propageren naar projectdeelnemers en NOK-punten
+- Bouwheer contactvelden uitgebreid (bedrijf, adres, e-mail, telefoon) op projectniveau
+- Link naar adressenboek op het hoofddashboard
+
 ## [0.10.0] — 2026-06-05
 
 ### Added
