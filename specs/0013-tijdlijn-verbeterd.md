@@ -2,7 +2,7 @@
 id: "0013"
 title: Tijdlijn verbeterd — drag-to-pan, weekas, zoom
 slug: tijdlijn-verbeterd
-status: queued
+status: deployed
 ---
 
 ## Doel
