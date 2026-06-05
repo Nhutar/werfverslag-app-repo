@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -127,13 +128,17 @@ export function TijdlijnSVG({
     startOffX: 0, startOffY: 0, moved: false,
   });
 
+  const router = useRouter();
+
   // Blokje-drag state
+  // dragActief = false: muisknop ingedrukt maar nog niet genoeg bewogen (= potentiële klik)
+  // dragActief = true: drempelafstand overschreden, deadline wordt verschoven
   const blokjeDrag = useRef<{
-    active: boolean;
     nokId: string;
     verslagDatum: string;
     startClientX: number;
     origineleDeadline: string;
+    dragActief: boolean;
   } | null>(null);
 
   const [sleepState, setSleepState] = useState<{
@@ -239,13 +244,22 @@ export function TijdlijnSVG({
     e.preventDefault();
   }, [offset]);
 
+  const DRAG_DREMPEL_PX = 5; // minimale beweging voor drag-activatie
+
   const onMouseMove = useCallback((e: React.MouseEvent) => {
-    // Blokje-drag heeft prioriteit
-    if (blokjeDrag.current?.active) {
+    // Blokje-drag: drempel bewaken of deadline bijwerken
+    if (blokjeDrag.current) {
       const dx = e.clientX - blokjeDrag.current.startClientX;
+
+      if (!blokjeDrag.current.dragActief) {
+        // Drempel: pas starten als > 5px horizontaal bewogen
+        if (Math.abs(dx) < DRAG_DREMPEL_PX) return;
+        blokjeDrag.current.dragActief = true;
+      }
+
+      // Deadline berekenen
       const dagsDelta = Math.round(dx / pxPerDag);
       let nieuweDeadline = addDagen(blokjeDrag.current.origineleDeadline, dagsDelta);
-      // Minimum = verslagDatum
       if (nieuweDeadline < blokjeDrag.current.verslagDatum) {
         nieuweDeadline = blokjeDrag.current.verslagDatum;
       }
@@ -264,18 +278,29 @@ export function TijdlijnSVG({
       x: Math.max(minX, Math.min(0, canvasDrag.current.startOffX + dx)),
       y: Math.max(minY, Math.min(0, canvasDrag.current.startOffY + dy)),
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pxPerDag, svgBreedte, svgHoogte]);
 
   const onMouseUp = useCallback(async () => {
-    // Blokje-drag afronden
-    if (blokjeDrag.current?.active && sleepState) {
-      const { nokId } = blokjeDrag.current;
-      const nieuweDeadline = sleepState.deadline;
-      blokjeDrag.current.active = false;
+    if (blokjeDrag.current) {
+      const drag = blokjeDrag.current;
+      blokjeDrag.current = null;
+
+      if (!drag.dragActief) {
+        // Geen beweging = klik → open modaal
+        setSleepState(null);
+        onBekijkNok(drag.nokId);
+        return;
+      }
+
+      // Drag afgerond → sla deadline op
+      const nieuweDeadline = sleepState?.deadline ?? drag.origineleDeadline;
       setSleepState(null);
 
+      if (nieuweDeadline === drag.origineleDeadline) return; // geen wijziging
+
       try {
-        const res = await fetch(`/api/nok-punten/${nokId}`, {
+        const res = await fetch(`/api/nok-punten/${drag.nokId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ deadlineOnly: true, deadline: nieuweDeadline }),
@@ -284,17 +309,17 @@ export function TijdlijnSVG({
           setFoutMelding("Deadline kon niet worden bijgewerkt");
           setTimeout(() => setFoutMelding(null), 3000);
         } else {
-          onDeadlineWijzig?.(nokId, nieuweDeadline);
+          onDeadlineWijzig?.(drag.nokId, nieuweDeadline);
+          router.refresh();
         }
       } catch {
         setFoutMelding("Deadline kon niet worden bijgewerkt");
         setTimeout(() => setFoutMelding(null), 3000);
       }
-      blokjeDrag.current = null;
       return;
     }
     canvasDrag.current.active = false;
-  }, [sleepState, onDeadlineWijzig]);
+  }, [sleepState, onDeadlineWijzig, onBekijkNok, router]);
 
   // Reset offset bij zoom-wissel
   useEffect(() => {
@@ -317,8 +342,6 @@ export function TijdlijnSVG({
 
   // ─────────────────────────────────────────────────────────────────────────────
 
-  const isSlepen = !!sleepState;
-
   return (
     <div className="relative">
       {foutMelding && (
@@ -329,7 +352,7 @@ export function TijdlijnSVG({
       <div
         ref={containerRef}
         className="relative rounded-xl border border-gray-200 bg-white overflow-hidden"
-        style={{ height: VIEWPORT_H, cursor: isSlepen ? "ew-resize" : "grab", userSelect: "none" }}
+        style={{ height: VIEWPORT_H, cursor: sleepState ? "ew-resize" : "grab", userSelect: "none" }}
         onMouseDown={onCanvasMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}
@@ -423,28 +446,21 @@ export function TijdlijnSVG({
             const by = nok.nokCenterY - BLOKJE_H / 2;
             const kleur = statusKleur(nok.status);
             const wordtGeslepen = sleepState?.nokId === nok.id;
-            const kanSlepen = verslaggeVerModus;
 
             return (
               <g key={`blokje-${nok.id}`}
-                style={{ cursor: kanSlepen ? "ew-resize" : "pointer" }}
+                style={{ cursor: "pointer" }}
                 onMouseDown={(e) => {
-                  if (kanSlepen) {
-                    // Start blokje-drag, stop canvas-pan
+                  if (verslaggeVerModus) {
+                    // Onderschep canvas-pan, start potentiële blokje-drag
                     e.stopPropagation();
                     blokjeDrag.current = {
-                      active: true,
                       nokId: nok.id,
                       verslagDatum: nok.verslagDatum,
                       startClientX: e.clientX,
                       origineleDeadline: nok.deadline,
+                      dragActief: false,
                     };
-                  }
-                }}
-                onClick={(e) => {
-                  if (!canvasDrag.current.moved && !blokjeDrag.current) {
-                    e.stopPropagation();
-                    onBekijkNok(nok.id);
                   }
                 }}
               >
