@@ -5,33 +5,60 @@ interface DeelnemerInput {
   discipline: string;
   naam: string;
   email: string;
+  adresboekContactId?: string | null;
+}
+
+async function slaOpInAdressenboek(d: DeelnemerInput): Promise<string | null> {
+  const emailGenormaliseerd = d.email.trim().toLowerCase();
+  const bestaand = await prisma.adresboekContact.findUnique({
+    where: { email: emailGenormaliseerd },
+  });
+  if (bestaand) return bestaand.id;
+  const nieuw = await prisma.adresboekContact.create({
+    data: {
+      naam: d.naam.trim(),
+      discipline: d.discipline,
+      email: emailGenormaliseerd,
+    },
+  });
+  return nieuw.id;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { naam, werfadres, bouwheer, beschrijving, deelnemers } = body;
+    const {
+      naam, werfadres, bouwheer, bouwheerBedrijf, bouwheerAdres, bouwheerEmail,
+      bouwheerTelefoon, beschrijving, deelnemers,
+    } = body;
 
     if (!naam?.trim() || !werfadres?.trim()) {
-      return NextResponse.json(
-        { error: "Naam en werfadres zijn verplicht" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Naam en werfadres zijn verplicht" }, { status: 400 });
+    }
+
+    // Auto-save deelnemers naar adressenboek en verzamel contactIds
+    const deelnemerData = [];
+    for (const d of (deelnemers ?? []) as DeelnemerInput[]) {
+      const contactId = d.adresboekContactId ?? await slaOpInAdressenboek(d);
+      deelnemerData.push({
+        discipline: d.discipline,
+        naam: d.naam,
+        email: d.email.trim().toLowerCase(),
+        adresboekContactId: contactId,
+      });
     }
 
     const project = await prisma.project.create({
       data: {
         naam,
         werfadres,
-        bouwheer: bouwheer?.trim() ? bouwheer : null,
-        beschrijving: beschrijving?.trim() ? beschrijving : null,
-        deelnemers: {
-          create: (deelnemers ?? []).map((d: DeelnemerInput) => ({
-            discipline: d.discipline,
-            naam: d.naam,
-            email: d.email,
-          })),
-        },
+        bouwheer: bouwheer?.trim() || null,
+        bouwheerBedrijf: bouwheerBedrijf?.trim() || null,
+        bouwheerAdres: bouwheerAdres?.trim() || null,
+        bouwheerEmail: bouwheerEmail?.trim() || null,
+        bouwheerTelefoon: bouwheerTelefoon?.trim() || null,
+        beschrijving: beschrijving?.trim() || null,
+        deelnemers: { create: deelnemerData },
       },
     });
 

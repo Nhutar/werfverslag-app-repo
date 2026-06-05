@@ -14,6 +14,10 @@ export default function ProjectAanpassenPagina({ params }: { params: { id: strin
           naam: data.naam ?? "",
           werfadres: data.werfadres ?? "",
           bouwheer: data.bouwheer ?? "",
+          bouwheerBedrijf: data.bouwheerBedrijf ?? "",
+          bouwheerAdres: data.bouwheerAdres ?? "",
+          bouwheerEmail: data.bouwheerEmail ?? "",
+          bouwheerTelefoon: data.bouwheerTelefoon ?? "",
           beschrijving: data.beschrijving ?? "",
           deelnemers: data.deelnemers ?? [],
         });

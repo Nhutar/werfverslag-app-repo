@@ -3,10 +3,23 @@ import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/lib/supabase";
 
 interface DeelnemerInput {
-  id?: string; // bestaande deelnemer heeft een id
+  id?: string;
   discipline: string;
   naam: string;
   email: string;
+  adresboekContactId?: string | null;
+}
+
+async function slaOpInAdressenboek(d: DeelnemerInput): Promise<string | null> {
+  const emailGenormaliseerd = d.email.trim().toLowerCase();
+  const bestaand = await prisma.adresboekContact.findUnique({
+    where: { email: emailGenormaliseerd },
+  });
+  if (bestaand) return bestaand.id;
+  const nieuw = await prisma.adresboekContact.create({
+    data: { naam: d.naam.trim(), discipline: d.discipline, email: emailGenormaliseerd },
+  });
+  return nieuw.id;
 }
 
 export async function GET(
@@ -27,12 +40,17 @@ export async function GET(
     naam: project.naam,
     werfadres: project.werfadres,
     bouwheer: project.bouwheer,
+    bouwheerBedrijf: project.bouwheerBedrijf,
+    bouwheerAdres: project.bouwheerAdres,
+    bouwheerEmail: project.bouwheerEmail,
+    bouwheerTelefoon: project.bouwheerTelefoon,
     beschrijving: project.beschrijving,
     deelnemers: project.deelnemers.map((d) => ({
       id: d.id,
       naam: d.naam,
       discipline: d.discipline,
       email: d.email,
+      adresboekContactId: d.adresboekContactId,
     })),
   });
 }
@@ -43,7 +61,10 @@ export async function PATCH(
 ) {
   const projectId = params.id;
   const body = await req.json();
-  const { naam, werfadres, bouwheer, beschrijving, deelnemers } = body;
+  const {
+    naam, werfadres, bouwheer, bouwheerBedrijf, bouwheerAdres, bouwheerEmail,
+    bouwheerTelefoon, beschrijving, deelnemers,
+  } = body;
 
   if (!naam?.trim() || !werfadres?.trim()) {
     return NextResponse.json({ error: "Naam en werfadres zijn verplicht" }, { status: 400 });
@@ -75,8 +96,12 @@ export async function PATCH(
     data: {
       naam,
       werfadres,
-      bouwheer: bouwheer?.trim() ? bouwheer : null,
-      beschrijving: beschrijving?.trim() ? beschrijving : null,
+      bouwheer: bouwheer?.trim() || null,
+      bouwheerBedrijf: bouwheerBedrijf?.trim() || null,
+      bouwheerAdres: bouwheerAdres?.trim() || null,
+      bouwheerEmail: bouwheerEmail?.trim() || null,
+      bouwheerTelefoon: bouwheerTelefoon?.trim() || null,
+      beschrijving: beschrijving?.trim() || null,
     },
   });
 
@@ -86,21 +111,30 @@ export async function PATCH(
       const oud = bestaande.find((b) => b.id === d.id);
       await prisma.projectDeelnemer.update({
         where: { id: d.id },
-        data: { naam: d.naam, discipline: d.discipline, email: d.email },
+        data: {
+          naam: d.naam,
+          discipline: d.discipline,
+          email: d.email,
+          adresboekContactId: d.adresboekContactId ?? undefined,
+        },
       });
-      // Sync gedenormaliseerde verantwoordelijke-gegevens op NOK-punten van dit project
       if (oud) {
         await prisma.nokPunt.updateMany({
-          where: {
-            werfverslag: { projectId },
-            verantwoordelijkeEmail: oud.email,
-          },
+          where: { werfverslag: { projectId }, verantwoordelijkeEmail: oud.email },
           data: { verantwoordelijkeNaam: d.naam, verantwoordelijkeEmail: d.email },
         });
       }
     } else {
+      // Nieuw: auto-save naar adressenboek
+      const contactId = d.adresboekContactId ?? await slaOpInAdressenboek(d);
       await prisma.projectDeelnemer.create({
-        data: { projectId, naam: d.naam, discipline: d.discipline, email: d.email },
+        data: {
+          projectId,
+          naam: d.naam,
+          discipline: d.discipline,
+          email: d.email.trim().toLowerCase(),
+          adresboekContactId: contactId,
+        },
       });
     }
   }

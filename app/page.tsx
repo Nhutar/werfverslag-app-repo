@@ -50,12 +50,20 @@ export default async function HoofdDashboard() {
             {projecten.length} {projecten.length === 1 ? "project" : "projecten"}
           </p>
         </div>
-        <Link
-          href="/project/nieuw"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          + Nieuw project
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/adressenboek"
+            className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+          >
+            📒 Adressenboek
+          </Link>
+          <Link
+            href="/project/nieuw"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            + Nieuw project
+          </Link>
+        </div>
       </div>
 
       {projecten.length === 0 ? (
