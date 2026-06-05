@@ -19,6 +19,7 @@ export default async function HoofdDashboard() {
       open: 0,
       "bijna-deadline": 0,
       "voorbij-deadline": 0,
+      "wacht-op-goedkeuring": 0,
       opgelost: 0,
     };
     let aantalPunten = 0;

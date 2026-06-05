@@ -2,10 +2,12 @@ export type NokStatus =
   | "open"
   | "bijna-deadline"
   | "voorbij-deadline"
+  | "wacht-op-goedkeuring"
   | "opgelost";
 
 export function berekenStatus(deadline: Date, status: string): NokStatus {
   if (status === "opgelost") return "opgelost";
+  if (status === "wacht-op-goedkeuring") return "wacht-op-goedkeuring";
 
   const nu = new Date();
   nu.setHours(0, 0, 0, 0);
@@ -25,6 +27,7 @@ export const STATUS_LABELS: Record<NokStatus, string> = {
   open: "Open",
   "bijna-deadline": "Bijna deadline",
   "voorbij-deadline": "Voorbij deadline",
+  "wacht-op-goedkeuring": "Wacht op goedkeuring",
   opgelost: "Opgelost",
 };
 
@@ -32,6 +35,7 @@ export const STATUS_KLEUREN: Record<NokStatus, string> = {
   open: "bg-yellow-100 text-yellow-800 border border-yellow-300",
   "bijna-deadline": "bg-orange-100 text-orange-800 border border-orange-300",
   "voorbij-deadline": "bg-red-100 text-red-800 border border-red-300",
+  "wacht-op-goedkeuring": "bg-blue-100 text-blue-800 border border-blue-300",
   opgelost: "bg-green-100 text-green-800 border border-green-300",
 };
 
@@ -39,5 +43,6 @@ export const STATUS_DOT: Record<NokStatus, string> = {
   open: "bg-yellow-400",
   "bijna-deadline": "bg-orange-500",
   "voorbij-deadline": "bg-red-500",
+  "wacht-op-goedkeuring": "bg-blue-500",
   opgelost: "bg-green-500",
 };

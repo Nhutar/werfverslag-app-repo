@@ -19,7 +19,8 @@ const STATUS_VOLGORDE: Record<NokStatus, number> = {
   "voorbij-deadline": 0,
   "bijna-deadline": 1,
   open: 2,
-  opgelost: 3,
+  "wacht-op-goedkeuring": 3,
+  opgelost: 4,
 };
 
 export function NokPuntenSectie({
@@ -166,6 +167,7 @@ export function NokPuntenSectie({
               <option value="open">Open</option>
               <option value="bijna-deadline">Bijna deadline</option>
               <option value="voorbij-deadline">Voorbij deadline</option>
+              <option value="wacht-op-goedkeuring">Wacht op goedkeuring</option>
               <option value="opgelost">Opgelost</option>
             </select>
 

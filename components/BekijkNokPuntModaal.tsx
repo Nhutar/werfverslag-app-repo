@@ -19,14 +19,18 @@ export interface NokPuntDetail {
   opgelostDoorNaam: string | null;
   oplossingOmschrijving: string | null;
   oplossingFotoUrl: string | null;
+  afkeuringsReden: string | null;
+  afgekeurdOp: string | null;
   verslagId: string;
 }
 
 export function BekijkNokPuntModaal({
   punt,
+  verantwoordelijkeModus = false,
   onSluit,
 }: {
   punt: NokPuntDetail;
+  verantwoordelijkeModus?: boolean;
   onSluit: () => void;
 }) {
   const router = useRouter();
@@ -45,6 +49,10 @@ export function BekijkNokPuntModaal({
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState<string | null>(null);
+
+  // Afkeuren-scherm (verslaggever)
+  const [afkeurenScherm, setAfkeurenScherm] = useState(false);
+  const [afkeuringsReden, setAfkeuringsReden] = useState("");
 
   function fotoKiezen(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null;
@@ -80,6 +88,44 @@ export function BekijkNokPuntModaal({
     }
   }
 
+  async function bevestigAanvaarden() {
+    setBezig(true);
+    const res = await fetch(`/api/nok-punten/${punt.id}/aanvaarden`, { method: "POST" });
+    if (res.ok) {
+      onSluit();
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setFout(data.error ?? "Er is iets misgegaan.");
+      setBezig(false);
+    }
+  }
+
+  async function bevestigAfkeuren() {
+    if (!afkeuringsReden.trim()) {
+      setFout("Afkeuringsreden is verplicht.");
+      return;
+    }
+    setBezig(true);
+    setFout(null);
+    const res = await fetch(`/api/nok-punten/${punt.id}/afkeuren`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ afkeuringsReden }),
+    });
+    if (res.ok) {
+      onSluit();
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setFout(data.error ?? "Er is iets misgegaan.");
+      setBezig(false);
+    }
+  }
+
+  const kanAfvinken =
+    punt.status !== "opgelost" && punt.status !== "wacht-op-goedkeuring";
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-8">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -111,7 +157,7 @@ export function BekijkNokPuntModaal({
             </div>
           )}
 
-          {/* Foto's */}
+          {/* Foto's NOK */}
           {punt.fotoUrls.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-500 mb-2">Foto&apos;s</p>
@@ -142,32 +188,116 @@ export function BekijkNokPuntModaal({
             </div>
           </div>
 
-          {/* Opgeloste info */}
-          {punt.status === "opgelost" && punt.opgelostOp && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-xs font-medium text-green-700 mb-1">Opgelost</p>
-              <p className="text-sm text-green-800">
-                Op {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}
-                {punt.opgelostDoorNaam && ` door ${punt.opgelostDoorNaam}`}
-              </p>
-              {punt.oplossingOmschrijving && (
-                <p className="text-sm text-green-700 mt-1">{punt.oplossingOmschrijving}</p>
+          {/* Historiek */}
+          {(punt.opgelostOp || punt.afkeuringsReden) && (
+            <div className="border-t border-gray-100 pt-4 flex flex-col gap-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Historiek</p>
+
+              {/* Ingediende oplossing */}
+              {punt.opgelostOp && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs font-medium text-blue-700 mb-1">
+                    Oplossing ingediend op{" "}
+                    {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}
+                    {punt.opgelostDoorNaam && ` door ${punt.opgelostDoorNaam}`}
+                  </p>
+                  {punt.oplossingOmschrijving && (
+                    <p className="text-sm text-blue-800">{punt.oplossingOmschrijving}</p>
+                  )}
+                  {punt.oplossingFotoUrl && (
+                    <a href={punt.oplossingFotoUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={punt.oplossingFotoUrl}
+                        alt="Foto oplossing"
+                        className="w-20 h-20 object-cover rounded-lg border border-blue-200"
+                      />
+                    </a>
+                  )}
+                  {punt.status === "opgelost" && (
+                    <p className="text-xs text-green-700 font-medium mt-2">✓ Aanvaard door verslaggever</p>
+                  )}
+                </div>
               )}
-              {punt.oplossingFotoUrl && (
-                <a href={punt.oplossingFotoUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={punt.oplossingFotoUrl}
-                    alt="Foto oplossing"
-                    className="w-20 h-20 object-cover rounded-lg border border-green-200"
-                  />
-                </a>
+
+              {/* Afkeuring */}
+              {punt.afkeuringsReden && punt.afgekeurdOp && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-xs font-medium text-red-700 mb-1">
+                    Afgekeurd op {new Date(punt.afgekeurdOp).toLocaleDateString("nl-BE")}
+                  </p>
+                  <p className="text-sm text-red-800">{punt.afkeuringsReden}</p>
+                </div>
               )}
             </div>
           )}
 
-          {/* Opgelost markeren */}
-          {punt.status !== "opgelost" && !oplossingsScherm && (
+          {/* Goedkeuringsacties — enkel voor verslaggever wanneer wacht-op-goedkeuring */}
+          {!verantwoordelijkeModus && punt.status === "wacht-op-goedkeuring" && !afkeurenScherm && (
+            <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 flex flex-col gap-3">
+              <p className="text-sm font-medium text-blue-900">Oplossing beoordelen</p>
+              {fout && <p className="text-xs text-red-600">{fout}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={bevestigAanvaarden}
+                  disabled={bezig}
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  {bezig ? "Bezig..." : "Aanvaarden"}
+                </button>
+                <button
+                  onClick={() => { setAfkeurenScherm(true); setFout(null); }}
+                  disabled={bezig}
+                  className="flex-1 bg-white border border-red-300 text-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                >
+                  Afkeuren
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Afkeurenformulier */}
+          {!verantwoordelijkeModus && afkeurenScherm && (
+            <div className="border border-red-200 rounded-lg p-4 flex flex-col gap-3">
+              <p className="text-sm font-medium text-gray-800">Reden van afkeuring</p>
+              <textarea
+                rows={3}
+                value={afkeuringsReden}
+                onChange={(e) => setAfkeuringsReden(e.target.value)}
+                placeholder="Leg uit waarom de oplossing niet volstaat..."
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+              />
+              {fout && <p className="text-xs text-red-600">{fout}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={bevestigAfkeuren}
+                  disabled={bezig}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  {bezig ? "Bezig..." : "Bevestig afkeuring"}
+                </button>
+                <button
+                  onClick={() => { setAfkeurenScherm(false); setFout(null); }}
+                  disabled={bezig}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-800"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Melding aan verantwoordelijke na indienen */}
+          {verantwoordelijkeModus && punt.status === "wacht-op-goedkeuring" && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                Oplossing ingediend — wacht op goedkeuring van de verslaggever.
+              </p>
+            </div>
+          )}
+
+          {/* Opgelost markeren — enkel als het punt nog open is */}
+          {kanAfvinken && !oplossingsScherm && (
             <button
               onClick={() => setOplossingsScherm(true)}
               className="w-full bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"

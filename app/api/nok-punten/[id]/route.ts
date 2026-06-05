@@ -32,6 +32,8 @@ export async function GET(
     opgelostDoorNaam: punt.opgelostDoorNaam,
     oplossingOmschrijving: punt.oplossingOmschrijving,
     oplossingFotoUrl: punt.oplossingFotoUrl,
+    afkeuringsReden: punt.afkeuringsReden,
+    afgekeurdOp: punt.afgekeurdOp ? punt.afgekeurdOp.toISOString() : null,
     verslagId: punt.werfverslagId,
     verslagNaam: punt.werfverslag.project.naam,
     // Alle projectdeelnemers voor de verantwoordelijke-dropdown

@@ -5,6 +5,15 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-06-05
+
+### Added
+- Goedkeuringsflow voor NOK-punten: na afvinken gaat een punt naar status "Wacht op goedkeuring" (blauw)
+- Verslaggever kan oplossing aanvaarden (punt wordt definitief groen) of afkeuren met verplichte reden
+- Bij afkeuring ontvangt de verantwoordelijke automatisch een e-mail met de reden en een nieuwe magic link
+- Historiekweergave in het bekijk-modaal: ingediende oplossing + eventuele afkeuring worden getoond
+- Nieuwe status "Wacht op goedkeuring" in statusbadges, tellers, legende en filterdropdown
+
 ## [0.9.2] — 2026-06-04
 
 ### Fixed

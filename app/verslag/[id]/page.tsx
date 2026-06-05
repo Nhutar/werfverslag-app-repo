@@ -44,6 +44,8 @@ export default async function VerslagDetailPagina({
     opgelostDoorNaam: p.opgelostDoorNaam,
     oplossingOmschrijving: p.oplossingOmschrijving,
     oplossingFotoUrl: p.oplossingFotoUrl,
+    afkeuringsReden: p.afkeuringsReden,
+    afgekeurdOp: p.afgekeurdOp ? p.afgekeurdOp.toISOString() : null,
     fotoUrls: p.fotoUrls,
     verslagId: verslag.id,
   }));

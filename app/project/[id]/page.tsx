@@ -30,6 +30,7 @@ export default async function ProjectDashboard({
       open: 0,
       "bijna-deadline": 0,
       "voorbij-deadline": 0,
+      "wacht-op-goedkeuring": 0,
       opgelost: 0,
     };
     verslag.nokPunten.forEach((p) => tellers[berekenStatus(p.deadline, p.status)]++);
