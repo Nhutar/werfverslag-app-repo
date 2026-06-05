@@ -15,6 +15,7 @@ model Project {
   bouwheerAdres    String?            @map("bouwheer_adres")
   bouwheerEmail    String?            @map("bouwheer_email")
   bouwheerTelefoon String?            @map("bouwheer_telefoon")
+  startdatum       DateTime?          @db.Date @map("startdatum")
   beschrijving     String?
   aangemaaktOp     DateTime           @default(now()) @map("aangemaakt_op")
   deelnemers       ProjectDeelnemer[]

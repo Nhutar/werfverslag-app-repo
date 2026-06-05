@@ -99,6 +99,7 @@ export default async function VerslagDetailPagina({
       <NokPuntenSectie
         verslagId={verslag.id}
         verslagNaam={verslag.project.naam}
+        verslagDatum={verslag.datum.toISOString().split("T")[0]}
         punten={puntenData}
         aanwezigen={aanwezigen}
         initieleVerantwoordelijke={searchParams.verantwoordelijke ?? ""}

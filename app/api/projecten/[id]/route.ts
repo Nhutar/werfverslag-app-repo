@@ -44,6 +44,7 @@ export async function GET(
     bouwheerAdres: project.bouwheerAdres,
     bouwheerEmail: project.bouwheerEmail,
     bouwheerTelefoon: project.bouwheerTelefoon,
+    startdatum: project.startdatum ? project.startdatum.toISOString().split("T")[0] : null,
     beschrijving: project.beschrijving,
     deelnemers: project.deelnemers.map((d) => ({
       id: d.id,
@@ -63,7 +64,7 @@ export async function PATCH(
   const body = await req.json();
   const {
     naam, werfadres, bouwheer, bouwheerBedrijf, bouwheerAdres, bouwheerEmail,
-    bouwheerTelefoon, beschrijving, deelnemers,
+    bouwheerTelefoon, startdatum, beschrijving, deelnemers,
   } = body;
 
   if (!naam?.trim() || !werfadres?.trim()) {
@@ -101,6 +102,7 @@ export async function PATCH(
       bouwheerAdres: bouwheerAdres?.trim() || null,
       bouwheerEmail: bouwheerEmail?.trim() || null,
       bouwheerTelefoon: bouwheerTelefoon?.trim() || null,
+      startdatum: startdatum ? new Date(startdatum) : null,
       beschrijving: beschrijving?.trim() || null,
     },
   });

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { berekenStatus, NokStatus } from "@/lib/status";
-import { WerfverslagKaartLijst } from "@/components/WerfverslagKaartLijst";
-import { StatusLegende } from "@/components/StatusLegende";
+import { ProjectTabbladen } from "@/components/ProjectTabbladen";
+import { NokPuntData } from "@/components/NokPuntenLijst";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,8 @@ export default async function ProjectDashboard({
 
   if (!project) notFound();
 
-  const verslagenData = project.werfverslagen.map((verslag) => {
+  // Data voor kaartenlijst
+  const verslagenKaart = project.werfverslagen.map((verslag) => {
     const tellers: Record<NokStatus, number> = {
       open: 0,
       "bijna-deadline": 0,
@@ -49,6 +50,30 @@ export default async function ProjectDashboard({
     };
   });
 
+  // Data voor tijdlijn
+  const verslagenTijdlijn = project.werfverslagen.map((verslag) => ({
+    id: verslag.id,
+    datum: verslag.datum.toISOString().split("T")[0],
+    nokPunten: verslag.nokPunten.map((p): NokPuntData => ({
+      id: p.id,
+      titel: p.titel,
+      discipline: p.discipline,
+      omschrijving: p.omschrijving,
+      verantwoordelijkeNaam: p.verantwoordelijkeNaam,
+      verantwoordelijkeEmail: p.verantwoordelijkeEmail,
+      deadline: p.deadline.toISOString(),
+      status: p.status,
+      opgelostOp: p.opgelostOp ? p.opgelostOp.toISOString() : null,
+      opgelostDoorNaam: p.opgelostDoorNaam,
+      oplossingOmschrijving: p.oplossingOmschrijving,
+      oplossingFotoUrl: p.oplossingFotoUrl,
+      afkeuringsReden: p.afkeuringsReden,
+      afgekeurdOp: p.afgekeurdOp ? p.afgekeurdOp.toISOString() : null,
+      fotoUrls: p.fotoUrls,
+      verslagId: verslag.id,
+    })),
+  }));
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <Link
@@ -60,8 +85,24 @@ export default async function ProjectDashboard({
 
       {/* Projectkaart */}
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h1 className="text-xl font-bold text-gray-900">{project.naam}</h1>
-        <p className="text-sm text-gray-500 mt-0.5">{project.werfadres}</p>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-900">{project.naam}</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{project.werfadres}</p>
+            {project.startdatum && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                Gestart op {new Date(project.startdatum).toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}
+              </p>
+            )}
+          </div>
+          <Link
+            href={`/project/${project.id}/aanpassen`}
+            className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded"
+          >
+            ✏️ Aanpassen
+          </Link>
+        </div>
+
         {(project.bouwheer || project.bouwheerBedrijf) && (
           <div className="mt-2">
             <p className="text-xs font-medium text-gray-400">Bouwheer</p>
@@ -71,6 +112,7 @@ export default async function ProjectDashboard({
             {project.bouwheerTelefoon && <p className="text-xs text-gray-400">{project.bouwheerTelefoon}</p>}
           </div>
         )}
+
         {project.beschrijving && (
           <p className="text-sm text-gray-400 mt-2">{project.beschrijving}</p>
         )}
@@ -90,36 +132,14 @@ export default async function ProjectDashboard({
         )}
       </div>
 
-      {/* Werfverslagen */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold text-gray-900">
-          Werfverslagen{" "}
-          <span className="text-gray-400 font-normal text-sm">
-            ({project.werfverslagen.length})
-          </span>
-        </h2>
-        <Link
-          href={`/project/${project.id}/verslag/nieuw`}
-          className="inline-flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-        >
-          + Nieuw werfverslag
-        </Link>
-      </div>
-
-      {project.werfverslagen.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-          <p className="text-3xl mb-3">📋</p>
-          <p className="text-gray-600 font-medium">Nog geen werfverslagen</p>
-          <p className="text-gray-400 text-sm mt-1">Maak een werfverslag aan voor dit project.</p>
-        </div>
-      ) : (
-        <>
-          <WerfverslagKaartLijst verslagen={verslagenData} />
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <StatusLegende />
-          </div>
-        </>
-      )}
+      {/* Werfverslagen met tabbladen */}
+      <ProjectTabbladen
+        projectId={project.id}
+        verslagenKaart={verslagenKaart}
+        verslagenTijdlijn={verslagenTijdlijn}
+        projectNaam={project.naam}
+        startdatum={project.startdatum ? project.startdatum.toISOString().split("T")[0] : null}
+      />
     </div>
   );
 }
