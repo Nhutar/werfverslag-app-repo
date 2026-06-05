@@ -50,6 +50,23 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Snelle deadline-update (JSON body met deadlineOnly: true)
+  const contentType = req.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const body = await req.json().catch(() => ({}));
+    if (body.deadlineOnly && body.deadline) {
+      const punt = await prisma.nokPunt.findUnique({ where: { id: params.id }, select: { id: true, werfverslag: { select: { datum: true } } } });
+      if (!punt) return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
+      const nieuweDeadline = new Date(body.deadline);
+      const verslagDatum = new Date(punt.werfverslag.datum);
+      if (nieuweDeadline < verslagDatum) {
+        return NextResponse.json({ error: "Deadline mag niet vóór de verslagdatum liggen" }, { status: 400 });
+      }
+      await prisma.nokPunt.update({ where: { id: params.id }, data: { deadline: nieuweDeadline } });
+      return NextResponse.json({ ok: true });
+    }
+  }
+
   const punt = await prisma.nokPunt.findUnique({
     where: { id: params.id },
     include: { werfverslag: { include: { project: { include: { deelnemers: true } } } } },

@@ -56,7 +56,7 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
           }
           return true;
         })
-        .map((p) => ({ id: p.id, titel: p.titel, deadline: p.deadline, status: p.status, verslagId: p.verslagId })),
+        .map((p) => ({ id: p.id, titel: p.titel, deadline: p.deadline, status: p.status, verslagId: p.verslagId, verslagDatum: v.datum })),
     }));
   }, [verslagen, filterVerantwoordelijke, filterStatus, filterDiscipline]);
 
@@ -125,6 +125,7 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
         startdatum={startdatum}
         projectNaam={projectNaam}
         zoom={zoom}
+        verslaggeVerModus={!verantwoordelijkeModus}
         onBekijkNok={bekijkNok}
       />
 
