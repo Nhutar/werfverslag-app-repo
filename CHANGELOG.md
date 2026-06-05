@@ -5,6 +5,16 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-06-05
+
+### Changed
+- Tijdlijn volledig herschreven: drag-to-pan (horizontaal + verticaal, geen scrollbalk)
+- Instelbare zoom: Week (14px/dag) / 2 weken (8px/dag) / Maand (3px/dag)
+- Week-gebaseerde as met maandlabels en weekmarkeringen
+- Strakke verticale layout: minder lege ruimte, blokjes nooit buiten beeld
+- Subtiele schaduw op NOK-blokjes, afwisselende maandkleuring op achtergrond
+- Zoomknoppen rechtsboven naast de filterbalk
+
 ## [0.12.0] — 2026-06-05
 
 ### Added
