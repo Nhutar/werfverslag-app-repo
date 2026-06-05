@@ -2,7 +2,7 @@
 id: "0014"
 title: Gantt — deadline verslepen
 slug: gantt-deadline-verslepen
-status: queued
+status: deployed
 ---
 
 ## Doel
