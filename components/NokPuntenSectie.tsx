@@ -4,6 +4,7 @@ import { ReactNode, useMemo, useState } from "react";
 import Link from "next/link";
 import { NokPuntenLijst, NokPuntData } from "@/components/NokPuntenLijst";
 import { VerstuurNotificatiesModaal } from "@/components/VerstuurNotificatiesModaal";
+import { TijdlijnSectie } from "@/components/TijdlijnSectie";
 import { berekenStatus, NokStatus } from "@/lib/status";
 
 interface AanwezigeData {
@@ -26,6 +27,7 @@ const STATUS_VOLGORDE: Record<NokStatus, number> = {
 export function NokPuntenSectie({
   verslagId,
   verslagNaam,
+  verslagDatum,
   punten,
   aanwezigen,
   initieleVerantwoordelijke,
@@ -34,9 +36,10 @@ export function NokPuntenSectie({
 }: {
   verslagId: string;
   verslagNaam: string;
+  verslagDatum?: string;
   punten: NokPuntData[];
   aanwezigen: AanwezigeData[];
-  initieleVerantwoordelijke: string; // email of ""
+  initieleVerantwoordelijke: string;
   verantwoordelijkeModus?: boolean;
   kopInhoud: ReactNode;
 }) {
@@ -65,6 +68,7 @@ export function NokPuntenSectie({
   const [filterDiscipline, setFilterDiscipline] = useState<string>("alle");
   const [sortering, setSortering] = useState<SorteerOptie>("urgentie");
   const [notificatiesOpen, setNotificatiesOpen] = useState(false);
+  const [weergave, setWeergave] = useState<"lijst" | "tijdlijn">("lijst");
 
   const filterActief =
     filterVerantwoordelijke !== "" ||
@@ -115,10 +119,31 @@ export function NokPuntenSectie({
 
         {/* NOK-punten header */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <h2 className="font-semibold text-gray-900">
-            NOK-punten{" "}
-            <span className="text-gray-400 font-normal text-sm">({punten.length})</span>
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-semibold text-gray-900">
+              NOK-punten{" "}
+              <span className="text-gray-400 font-normal text-sm">({punten.length})</span>
+            </h2>
+            {/* Tabbladen */}
+            {!verantwoordelijkeModus && (
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setWeergave("lijst")}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${weergave === "lijst" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  Lijst
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWeergave("tijdlijn")}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${weergave === "tijdlijn" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  Tijdlijn
+                </button>
+              </div>
+            )}
+          </div>
           {!verantwoordelijkeModus && (
             <div className="flex gap-2">
               <button
@@ -203,24 +228,37 @@ export function NokPuntenSectie({
         )}
       </div>
 
+      {/* Tijdlijn-weergave */}
+      {weergave === "tijdlijn" && verslagDatum && (
+        <div className="pb-8 pt-4">
+          <TijdlijnSectie
+            verslagen={[{ id: verslagId, datum: verslagDatum, nokPunten: punten }]}
+            projectNaam={verslagNaam}
+            verantwoordelijkeModus={verantwoordelijkeModus}
+          />
+        </div>
+      )}
+
       {/* Lijst */}
-      <div className="pb-8 pt-4">
-        {punten.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <p className="text-3xl mb-3">✅</p>
-            <p className="text-gray-600 font-medium">Geen NOK-punten</p>
-            <p className="text-gray-400 text-sm mt-1">
-              Voeg een punt toe als er iets niet in orde is.
+      {weergave === "lijst" && (
+        <div className="pb-8 pt-4">
+          {punten.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+              <p className="text-3xl mb-3">✅</p>
+              <p className="text-gray-600 font-medium">Geen NOK-punten</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Voeg een punt toe als er iets niet in orde is.
+              </p>
+            </div>
+          ) : zichtbarePunten.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">
+              Geen NOK-punten voor deze filter.
             </p>
-          </div>
-        ) : zichtbarePunten.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">
-            Geen NOK-punten voor deze filter.
-          </p>
-        ) : (
-          <NokPuntenLijst punten={zichtbarePunten} verantwoordelijkeModus={verantwoordelijkeModus} />
-        )}
-      </div>
+          ) : (
+            <NokPuntenLijst punten={zichtbarePunten} verantwoordelijkeModus={verantwoordelijkeModus} />
+          )}
+        </div>
+      )}
 
       {notificatiesOpen && (
         <VerstuurNotificatiesModaal

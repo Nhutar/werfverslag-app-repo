@@ -21,7 +21,7 @@ export default function NieuwProjectPagina() {
   return (
     <ProjectFormulier
       titel="Nieuw project"
-      initieel={{ naam: "", werfadres: "", bouwheer: "", bouwheerBedrijf: "", bouwheerAdres: "", bouwheerEmail: "", bouwheerTelefoon: "", beschrijving: "", deelnemers: [] }}
+      initieel={{ naam: "", werfadres: "", bouwheer: "", bouwheerBedrijf: "", bouwheerAdres: "", bouwheerEmail: "", bouwheerTelefoon: "", startdatum: "", beschrijving: "", deelnemers: [] }}
       onOpslaan={opslaan}
       annulerenHref="/"
     />

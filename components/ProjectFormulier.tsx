@@ -20,6 +20,7 @@ export interface ProjectFormData {
   bouwheerAdres: string;
   bouwheerEmail: string;
   bouwheerTelefoon: string;
+  startdatum: string;
   beschrijving: string;
   deelnemers: DeelnemerVeld[];
 }
@@ -120,6 +121,7 @@ export function ProjectFormulier({
   const [bouwheerAdres, setBouwheerAdres] = useState(initieel.bouwheerAdres);
   const [bouwheerEmail, setBouwheerEmail] = useState(initieel.bouwheerEmail);
   const [bouwheerTelefoon, setBouwheerTelefoon] = useState(initieel.bouwheerTelefoon);
+  const [startdatum, setStartdatum] = useState(initieel.startdatum);
   const [beschrijving, setBeschrijving] = useState(initieel.beschrijving);
   const [deelnemers, setDeelnemers] = useState<DeelnemerVeld[]>(initieel.deelnemers);
   const [zoekModus, setZoekModus] = useState(false);
@@ -134,6 +136,7 @@ export function ProjectFormulier({
     setBouwheerAdres(initieel.bouwheerAdres);
     setBouwheerEmail(initieel.bouwheerEmail);
     setBouwheerTelefoon(initieel.bouwheerTelefoon);
+    setStartdatum(initieel.startdatum);
     setBeschrijving(initieel.beschrijving);
     setDeelnemers(initieel.deelnemers);
   }, [initieel]);
@@ -181,7 +184,7 @@ export function ProjectFormulier({
     setBezig(true);
     const foutmelding = await onOpslaan({
       naam, werfadres, bouwheer, bouwheerBedrijf, bouwheerAdres,
-      bouwheerEmail, bouwheerTelefoon, beschrijving, deelnemers,
+      bouwheerEmail, bouwheerTelefoon, startdatum, beschrijving, deelnemers,
     });
     if (foutmelding) {
       setFout(foutmelding);
@@ -225,6 +228,15 @@ export function ProjectFormulier({
               value={werfadres}
               onChange={(e) => setWerfadres(e.target.value)}
               placeholder="bv. Kerkstraat 12, 2000 Antwerpen"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Startdatum werf</label>
+            <input
+              type="date"
+              value={startdatum}
+              onChange={(e) => setStartdatum(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

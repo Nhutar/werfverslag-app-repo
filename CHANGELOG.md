@@ -5,6 +5,18 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-06-05
+
+### Added
+- Tijdlijn (Gantt) per project: tabblad "Tijdlijn" op de projectpagina met alle verslagen + NOK-punten
+- Tijdlijn per werfverslag: tabblad "Tijdlijn" op de werfverslagpagina
+- SVG-visualisatie: werfverslagen als knooppunten op een hoofdlijn, NOK-punten als klikbare blokjes op hun deadline-datum
+- Haakse verbindingslijnen van verslag naar NOK-punt, gespreide verticale niveaus om overlap te vermijden
+- Vandaag-lijn (blauw, gestippeld) + maandmarkeringen
+- Filtering op verantwoordelijke, status en discipline in de tijdlijn
+- Klikken op NOK-blokje opent het bestaande bekijk-modaal
+- Startdatum werf: nieuw optioneel veld op project (formulier + API)
+
 ## [0.11.0] — 2026-06-05
 
 ### Added
