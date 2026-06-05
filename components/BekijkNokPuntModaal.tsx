@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import { berekenStatus } from "@/lib/status";
+import { OpmerkingPaneel } from "@/components/OpmerkingPaneel";
 
 export interface NokPuntDetail {
   id: string;
@@ -27,10 +28,12 @@ export interface NokPuntDetail {
 export function BekijkNokPuntModaal({
   punt,
   verantwoordelijkeModus = false,
+  verantwoordelijkeNaam,
   onSluit,
 }: {
   punt: NokPuntDetail;
   verantwoordelijkeModus?: boolean;
+  verantwoordelijkeNaam?: string;
   onSluit: () => void;
 }) {
   const router = useRouter();
@@ -42,8 +45,10 @@ export function BekijkNokPuntModaal({
     year: "numeric",
   });
 
+  const [berichtenOpen, setBerichtenOpen] = useState(false);
   const [oplossingsScherm, setOplossingsScherm] = useState(false);
-  const [opgelostDoor, setOpgelostDoor] = useState("");
+  // Auto-naam: gebruik verantwoordelijkeNaam als die beschikbaar is (magic link modus)
+  const [opgelostDoor, setOpgelostDoor] = useState(verantwoordelijkeNaam ?? "");
   const [oplossingOmschrijving, setOplossingOmschrijving] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
@@ -311,18 +316,24 @@ export function BekijkNokPuntModaal({
             <div className="border border-gray-200 rounded-lg p-4 flex flex-col gap-3">
               <p className="text-sm font-medium text-gray-800">Oplossing registreren</p>
 
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Opgelost door <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={opgelostDoor}
-                  onChange={(e) => setOpgelostDoor(e.target.value)}
-                  placeholder="Naam"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              {/* Naam: verberg als verantwoordelijke (auto-ingevuld via magic link) */}
+              {!verantwoordelijkeModus && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Opgelost door <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={opgelostDoor}
+                    onChange={(e) => setOpgelostDoor(e.target.value)}
+                    placeholder="Naam"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+              {verantwoordelijkeModus && opgelostDoor && (
+                <p className="text-xs text-gray-500">Opgelost door: <strong>{opgelostDoor}</strong></p>
+              )}
 
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -394,6 +405,25 @@ export function BekijkNokPuntModaal({
               </div>
             </div>
           )}
+          {/* Chat / Berichten */}
+          <div className="border-t border-gray-100 pt-4">
+            <button
+              type="button"
+              onClick={() => setBerichtenOpen(!berichtenOpen)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-800 w-full mb-3"
+            >
+              <span className={`transition-transform text-xs ${berichtenOpen ? "rotate-90" : ""}`}>▶</span>
+              Berichten
+            </button>
+            {berichtenOpen && (
+              <OpmerkingPaneel
+                nokPuntId={punt.id}
+                auteurNaam={verantwoordelijkeNaam}
+                verantwoordelijkeModus={verantwoordelijkeModus}
+                titel="Chat"
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

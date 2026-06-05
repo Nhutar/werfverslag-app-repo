@@ -5,6 +5,16 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-06-05
+
+### Added
+- Opmerkingen-paneel per project en per werfverslag (scrollbaar, tekst + foto)
+- Chat per NOK-punt in het bekijk-modaal (collapsible "Berichten" sectie)
+- E-mail notificatie bij nieuw chatbericht op NOK-punt (naar verantwoordelijke)
+- Naam automatisch ingevuld via magic link bij opgelost markeren + chatberichten
+- Layout herwerking: project- en verslagpagina breder (max-w-6xl), 2 kolommen bovenaan
+- Nieuw datamodel Opmerking + migratie
+
 ## [0.14.0] — 2026-06-05
 
 ### Added
