@@ -1,61 +1,71 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface TijdlijnNokItem {
   id: string;
   titel: string;
-  deadline: string; // ISO date
+  deadline: string;
   status: string;
 }
 
 export interface TijdlijnVerslagItem {
   id: string;
-  datum: string; // ISO date
+  datum: string;
   nokPunten: TijdlijnNokItem[];
 }
+
+export type ZoomNiveau = "week" | "2weken" | "maand";
 
 interface Props {
   verslagen: TijdlijnVerslagItem[];
   startdatum?: string | null;
   projectNaam: string;
+  zoom: ZoomNiveau;
   onBekijkNok: (nokId: string) => void;
 }
 
-// ─── Layout constants ─────────────────────────────────────────────────────────
+// ─── Layout constanten ────────────────────────────────────────────────────────
 
-const PX_PER_DAG = 52;
-const LEVEL_H = 76;
-const BLOKJE_W = 136;
-const BLOKJE_H = 34;
-const BLOKJE_R = 6;
-const LINKS_MARGE = 24;
-const RECHTS_MARGE = 72;
-const TOP_PAD = 48;   // ruimte boven voor maandlabels
-const BOTTOM_PAD = 52; // ruimte onder voor verslaglabels
-const VERSLAG_W = 90;
-const VERSLAG_H = 26;
+const ZOOM_PX_PER_DAG: Record<ZoomNiveau, number> = {
+  week: 14,
+  "2weken": 8,
+  maand: 3,
+};
+
+const LEVEL_H = 55;
+const BLOKJE_W = 130;
+const BLOKJE_H = 32;
+const BLOKJE_R = 7;
+const LINKS_MARGE = 16;
+const RECHTS_MARGE = BLOKJE_W / 2 + 24;
+const TOP_PAD = 36;
+const BOTTOM_PAD = 36;
+const VERSLAG_W = 84;
+const VERSLAG_H = 24;
 const VERSLAG_R = 5;
 const DOT_R = 5;
+const VIEWPORT_H = 480;
 
 // ─── Status kleuren ───────────────────────────────────────────────────────────
 
 const STATUS_KLEUR: Record<string, string> = {
-  "open": "#FBBF24",
+  open: "#FBBF24",
   "bijna-deadline": "#F97316",
   "voorbij-deadline": "#EF4444",
   "wacht-op-goedkeuring": "#3B82F6",
-  "opgelost": "#22C55E",
+  opgelost: "#22C55E",
 };
 
-function statusKleur(status: string): string {
-  return STATUS_KLEUR[status] ?? "#9CA3AF";
+function statusKleur(s: string): string {
+  return STATUS_KLEUR[s] ?? "#9CA3AF";
 }
 
 // ─── Datumhulpfuncties ────────────────────────────────────────────────────────
 
 function parseDate(iso: string): Date {
-  // Zet ISO date-only string om naar local midnight
   const [y, m, d] = iso.split("T")[0].split("-").map(Number);
   return new Date(y, m - 1, d);
 }
@@ -64,30 +74,40 @@ function dagVerschil(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function formatDatum(d: Date): string {
+function formatDag(d: Date): string {
   return d.toLocaleDateString("nl-BE", { day: "numeric", month: "short" });
 }
 
 function formatMaand(d: Date): string {
-  return d.toLocaleDateString("nl-BE", { month: "short", year: "2-digit" });
+  return d.toLocaleDateString("nl-BE", { month: "long", year: "numeric" });
 }
 
-function truncate(tekst: string, max: number): string {
-  return tekst.length > max ? tekst.slice(0, max - 1) + "…" : tekst;
+function truncate(t: string, max: number): string {
+  return t.length > max ? t.slice(0, max - 1) + "…" : t;
+}
+
+function vorigeMaandag(d: Date): Date {
+  const dag = new Date(d);
+  const dow = dag.getDay();
+  const diff = dow === 0 ? 6 : dow - 1;
+  dag.setDate(dag.getDate() - diff);
+  return dag;
 }
 
 // ─── Hoofdcomponent ───────────────────────────────────────────────────────────
 
-export function TijdlijnSVG({ verslagen, startdatum, projectNaam, onBekijkNok }: Props) {
-  if (verslagen.length === 0) {
-    return (
-      <div className="text-center py-12 text-gray-400 text-sm">
-        Nog geen werfverslagen om te tonen.
-      </div>
-    );
-  }
+export function TijdlijnSVG({ verslagen, startdatum, projectNaam, zoom, onBekijkNok }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const dragState = useRef({
+    active: false, startX: 0, startY: 0,
+    startOffX: 0, startOffY: 0, moved: false,
+  });
 
-  // ── Tijdsbereik bepalen ──────────────────────────────────────────────────
+  const pxPerDag = ZOOM_PX_PER_DAG[zoom];
+
+  // Bereken tijdsbereik (ook als leeg — dan dummy waarden)
+  const heeftData = verslagen.length > 0 && verslagen.some(v => v.nokPunten.length > 0 || true);
 
   const alleDatums: Date[] = [];
   for (const v of verslagen) {
@@ -95,240 +115,244 @@ export function TijdlijnSVG({ verslagen, startdatum, projectNaam, onBekijkNok }:
     for (const n of v.nokPunten) alleDatums.push(parseDate(n.deadline));
   }
 
-  const vroegste = alleDatums.reduce((a, b) => (a < b ? a : b));
-  const laatste = alleDatums.reduce((a, b) => (a > b ? a : b));
+  const vandaag = new Date();
+  vandaag.setHours(0, 0, 0, 0);
 
-  // Startpunt: startdatum van project OF 7 dagen vóór vroegste datum
+  const vroegste = alleDatums.length > 0 ? alleDatums.reduce((a, b) => (a < b ? a : b)) : vandaag;
+  const laatste = alleDatums.length > 0 ? alleDatums.reduce((a, b) => (a > b ? a : b)) : vandaag;
+
   let beginDatum: Date;
   if (startdatum) {
     beginDatum = parseDate(startdatum);
   } else {
-    beginDatum = new Date(vroegste);
+    beginDatum = vorigeMaandag(new Date(vroegste));
     beginDatum.setDate(beginDatum.getDate() - 7);
   }
-
-  // Eindpunt: 21 dagen na laatste deadline
   const eindDatum = new Date(laatste);
-  eindDatum.setDate(eindDatum.getDate() + 21);
+  eindDatum.setDate(eindDatum.getDate() + 28);
 
-  const totaleDagen = dagVerschil(beginDatum, eindDatum);
+  const totaleDagen = Math.max(1, dagVerschil(beginDatum, eindDatum));
 
   function dateToX(d: Date): number {
-    return LINKS_MARGE + dagVerschil(beginDatum, d) * PX_PER_DAG;
+    return LINKS_MARGE + dagVerschil(beginDatum, d) * pxPerDag;
   }
 
-  // ── Niveaus berekenen ────────────────────────────────────────────────────
-
-  // Per verslag: wijs niveaus toe aan NOK-punten (afwisselend boven/onder)
-  type NokMetNiveau = TijdlijnNokItem & { verslagX: number; nokCenterY: number };
-  const nokMetNiveaus: NokMetNiveau[] = [];
-
+  // Niveaus
   let maxAbove = 0;
   let maxBelow = 0;
-
-  for (const verslag of verslagen) {
-    const nA = Math.ceil(verslag.nokPunten.length / 2);
-    const nB = Math.floor(verslag.nokPunten.length / 2);
+  for (const v of verslagen) {
+    const nA = Math.ceil(v.nokPunten.length / 2);
+    const nB = Math.floor(v.nokPunten.length / 2);
     if (nA > maxAbove) maxAbove = nA;
     if (nB > maxBelow) maxBelow = nB;
   }
 
   const mainLineY = TOP_PAD + maxAbove * LEVEL_H;
-  const svgHoogte = mainLineY + maxBelow * LEVEL_H + BOTTOM_PAD;
-  const svgBreedte = LINKS_MARGE + totaleDagen * PX_PER_DAG + RECHTS_MARGE;
+  const svgHoogte = Math.max(VIEWPORT_H, mainLineY + maxBelow * LEVEL_H + BOTTOM_PAD);
+  const svgBreedte = LINKS_MARGE + totaleDagen * pxPerDag + RECHTS_MARGE;
 
-  for (const verslag of verslagen) {
-    const verslagX = dateToX(parseDate(verslag.datum));
-    verslag.nokPunten.forEach((nok, i) => {
+  type NokItem = TijdlijnNokItem & { verslagX: number; nokCenterY: number };
+  const nokItems: NokItem[] = [];
+  for (const v of verslagen) {
+    const verslagX = dateToX(parseDate(v.datum));
+    v.nokPunten.forEach((nok, i) => {
       const levelNum = Math.floor(i / 2) + 1;
-      const richting = i % 2 === 0 ? -1 : 1; // even = boven, oneven = onder
-      const nokCenterY = mainLineY + richting * levelNum * LEVEL_H;
-      nokMetNiveaus.push({ ...nok, verslagX, nokCenterY });
+      const richting = i % 2 === 0 ? -1 : 1;
+      nokItems.push({ ...nok, verslagX, nokCenterY: mainLineY + richting * levelNum * LEVEL_H });
     });
   }
 
-  // ── Vandaag ──────────────────────────────────────────────────────────────
-
-  const vandaag = new Date();
-  vandaag.setHours(0, 0, 0, 0);
   const vandaagX = dateToX(vandaag);
-  const vandaagZichtbaar = vandaagX > LINKS_MARGE && vandaagX < svgBreedte - RECHTS_MARGE;
+  const vandaagZichtbaar = vandaagX > LINKS_MARGE - 1 && vandaagX < svgBreedte - RECHTS_MARGE + BLOKJE_W / 2;
 
-  // ── Maandmarkeringen ─────────────────────────────────────────────────────
-
+  // As-markeringen
   const maandMarkers: { x: number; label: string }[] = [];
-  const cur = new Date(beginDatum.getFullYear(), beginDatum.getMonth(), 1);
-  while (cur <= eindDatum) {
-    const x = dateToX(cur);
-    if (x >= LINKS_MARGE) {
-      maandMarkers.push({ x, label: formatMaand(cur) });
+  const weekMarkers: { x: number; label: string }[] = [];
+  {
+    const cur = new Date(beginDatum.getFullYear(), beginDatum.getMonth(), 1);
+    while (cur <= eindDatum) {
+      const x = dateToX(cur);
+      if (x >= LINKS_MARGE - 2) maandMarkers.push({ x, label: formatMaand(cur) });
+      cur.setMonth(cur.getMonth() + 1);
     }
-    cur.setMonth(cur.getMonth() + 1);
+  }
+  if (zoom !== "maand") {
+    let cur = vorigeMaandag(new Date(beginDatum));
+    while (cur <= eindDatum) {
+      const x = dateToX(cur);
+      if (x >= LINKS_MARGE) weekMarkers.push({ x, label: formatDag(cur) });
+      cur = new Date(cur);
+      cur.setDate(cur.getDate() + 7);
+    }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // Drag handlers — alle hooks vóór early return
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    dragState.current = {
+      active: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      startOffX: offset.x,
+      startOffY: offset.y,
+      moved: false,
+    };
+    e.preventDefault();
+  }, [offset]);
+
+  const onMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragState.current.active) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragState.current.moved = true;
+    const containerW = containerRef.current?.clientWidth ?? 800;
+    const minX = Math.min(0, containerW - svgBreedte);
+    const minY = Math.min(0, VIEWPORT_H - svgHoogte);
+    const newX = Math.max(minX, Math.min(0, dragState.current.startOffX + dx));
+    const newY = Math.max(minY, Math.min(0, dragState.current.startOffY + dy));
+    setOffset({ x: newX, y: newY });
+  }, [svgBreedte, svgHoogte]);
+
+  const onMouseUp = useCallback(() => {
+    dragState.current.active = false;
+  }, []);
+
+  // Reset offset bij zoom-wissel
+  useEffect(() => {
+    const containerW = containerRef.current?.clientWidth ?? 800;
+    const vX = LINKS_MARGE + dagVerschil(beginDatum, vandaag) * ZOOM_PX_PER_DAG[zoom];
+    const gewensteX = Math.max(containerW - svgBreedte, Math.min(0, containerW / 2 - vX));
+    setOffset({ x: gewensteX, y: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom]);
+
+  // ── Early return na alle hooks ──────────────────────────────────────────────
+  if (!heeftData || verslagen.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-400 text-sm bg-white rounded-xl border border-gray-200">
+        Nog geen werfverslagen om te tonen.
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="overflow-x-auto w-full rounded-xl border border-gray-200 bg-white">
+    <div
+      ref={containerRef}
+      className="relative rounded-xl border border-gray-200 bg-white overflow-hidden"
+      style={{ height: VIEWPORT_H, cursor: "grab", userSelect: "none" }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+      onMouseLeave={onMouseUp}
+    >
       <svg
         width={svgBreedte}
         height={svgHoogte}
-        style={{ display: "block", minWidth: svgBreedte }}
+        style={{
+          display: "block",
+          transform: `translate(${offset.x}px, ${offset.y}px)`,
+          willChange: "transform",
+        }}
       >
-        {/* Achtergrond */}
         <rect width={svgBreedte} height={svgHoogte} fill="white" />
 
-        {/* Maandmarkeringen */}
-        {maandMarkers.map(({ x, label }, i) => (
-          <g key={i}>
-            <line x1={x} y1={TOP_PAD / 2} x2={x} y2={svgHoogte - BOTTOM_PAD / 2}
-              stroke="#F3F4F6" strokeWidth={1} />
-            <text x={x + 4} y={16} fontSize={10} fill="#9CA3AF" fontFamily="sans-serif">
-              {label}
-            </text>
-          </g>
+        {/* Maand-kolom achtergronden */}
+        {maandMarkers.map(({ x }, i) => {
+          const volgende = maandMarkers[i + 1]?.x ?? (svgBreedte - RECHTS_MARGE);
+          return i % 2 === 0 ? (
+            <rect key={`mbg-${i}`} x={x} y={0} width={volgende - x} height={svgHoogte} fill="#F9FAFB" />
+          ) : null;
+        })}
+
+        {/* Week-verticale lijnen */}
+        {weekMarkers.map(({ x }, i) => (
+          <line key={`wl-${i}`} x1={x} y1={TOP_PAD} x2={x} y2={svgHoogte - BOTTOM_PAD / 2}
+            stroke="#E5E7EB" strokeWidth={1} />
         ))}
 
         {/* Vandaag-lijn */}
         {vandaagZichtbaar && (
           <g>
-            <line
-              x1={vandaagX} y1={TOP_PAD / 2}
-              x2={vandaagX} y2={svgHoogte - BOTTOM_PAD / 4}
-              stroke="#3B82F6" strokeWidth={1.5}
-              strokeDasharray="4 3"
-            />
-            <rect x={vandaagX - 22} y={2} width={44} height={16} rx={4} fill="#3B82F6" />
+            <line x1={vandaagX} y1={0} x2={vandaagX} y2={svgHoogte}
+              stroke="#3B82F6" strokeWidth={1.5} strokeDasharray="4 3" opacity={0.7} />
+            <rect x={vandaagX - 24} y={2} width={48} height={17} rx={4} fill="#3B82F6" />
             <text x={vandaagX} y={13} fontSize={9} fill="white" textAnchor="middle"
-              fontFamily="sans-serif" fontWeight="bold">
-              Vandaag
-            </text>
+              fontFamily="sans-serif" fontWeight="bold">Vandaag</text>
           </g>
         )}
 
-        {/* Hoofdlijn */}
-        <line
-          x1={LINKS_MARGE - 10} y1={mainLineY}
-          x2={svgBreedte - RECHTS_MARGE + 12} y2={mainLineY}
-          stroke="#374151" strokeWidth={2}
-        />
-        {/* Pijlpunt */}
-        <polygon
-          points={`${svgBreedte - RECHTS_MARGE + 20},${mainLineY} ${svgBreedte - RECHTS_MARGE + 10},${mainLineY - 5} ${svgBreedte - RECHTS_MARGE + 10},${mainLineY + 5}`}
-          fill="#374151"
-        />
+        {/* Maand labels */}
+        {maandMarkers.map(({ x, label }, i) => (
+          <text key={`ml-${i}`} x={x + 4} y={14} fontSize={9} fill="#9CA3AF" fontFamily="sans-serif">
+            {label}
+          </text>
+        ))}
 
-        {/* Projectnaamlabel */}
-        <text
-          x={LINKS_MARGE - 8} y={mainLineY - 8}
-          fontSize={10} fill="#6B7280" fontFamily="sans-serif"
-          textAnchor="start"
-        >
-          {truncate(projectNaam, 18)}
+        {/* Week labels */}
+        {weekMarkers.map(({ x, label }, i) => (
+          <text key={`wt-${i}`} x={x + 3} y={svgHoogte - BOTTOM_PAD + 14} fontSize={8}
+            fill="#9CA3AF" fontFamily="sans-serif">{label}</text>
+        ))}
+
+        {/* Hoofdlijn */}
+        <line x1={LINKS_MARGE - 4} y1={mainLineY} x2={svgBreedte - RECHTS_MARGE + 8} y2={mainLineY}
+          stroke="#1F2937" strokeWidth={2} />
+        <polygon
+          points={`${svgBreedte - RECHTS_MARGE + 16},${mainLineY} ${svgBreedte - RECHTS_MARGE + 6},${mainLineY - 5} ${svgBreedte - RECHTS_MARGE + 6},${mainLineY + 5}`}
+          fill="#1F2937" />
+        <text x={LINKS_MARGE} y={mainLineY - 9} fontSize={9} fill="#6B7280" fontFamily="sans-serif">
+          {truncate(projectNaam, 22)}
         </text>
 
-        {/* ── Verbindingslijnen (eerst, achter blokjes) ── */}
-        {nokMetNiveaus.map((nok) => {
+        {/* Verbindingslijnen */}
+        {nokItems.map((nok) => {
           const deadlineX = dateToX(parseDate(nok.deadline));
           const blokjeLinks = deadlineX - BLOKJE_W / 2;
           return (
-            <path
-              key={`lijn-${nok.id}`}
-              d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks},${nok.nokCenterY}`}
-              fill="none"
-              stroke="#D1D5DB"
-              strokeWidth={1.5}
-            />
+            <path key={`lijn-${nok.id}`}
+              d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
+              fill="none" stroke="#D1D5DB" strokeWidth={1.5} />
           );
         })}
 
-        {/* ── Werfverslagen ── */}
-        {verslagen.map((verslag) => {
-          const x = dateToX(parseDate(verslag.datum));
+        {/* Verslagen */}
+        {verslagen.map((v) => {
+          const x = dateToX(parseDate(v.datum));
           return (
-            <g key={verslag.id}>
-              <rect
-                x={x - VERSLAG_W / 2}
-                y={mainLineY - VERSLAG_H / 2}
-                width={VERSLAG_W}
-                height={VERSLAG_H}
-                rx={VERSLAG_R}
-                fill="white"
-                stroke="#374151"
-                strokeWidth={1.5}
-              />
-              <text
-                x={x}
-                y={mainLineY + 1}
-                fontSize={9}
-                fill="#111827"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily="sans-serif"
-                fontWeight="bold"
-              >
-                {formatDatum(parseDate(verslag.datum))}
-              </text>
-              {/* Datum label eronder */}
-              <text
-                x={x}
-                y={mainLineY + VERSLAG_H / 2 + 14}
-                fontSize={9}
-                fill="#9CA3AF"
-                textAnchor="middle"
-                fontFamily="sans-serif"
-              >
-                verslag
+            <g key={v.id}>
+              <rect x={x - VERSLAG_W / 2} y={mainLineY - VERSLAG_H / 2}
+                width={VERSLAG_W} height={VERSLAG_H} rx={VERSLAG_R}
+                fill="white" stroke="#1F2937" strokeWidth={1.5} />
+              <text x={x} y={mainLineY + 1} fontSize={9} fill="#111827"
+                textAnchor="middle" dominantBaseline="middle"
+                fontFamily="sans-serif" fontWeight="600">
+                {formatDag(parseDate(v.datum))}
               </text>
             </g>
           );
         })}
 
-        {/* ── NOK-punt blokjes ── */}
-        {nokMetNiveaus.map((nok) => {
+        {/* NOK-blokjes */}
+        {nokItems.map((nok) => {
           const deadlineX = dateToX(parseDate(nok.deadline));
           const bx = deadlineX - BLOKJE_W / 2;
           const by = nok.nokCenterY - BLOKJE_H / 2;
           const kleur = statusKleur(nok.status);
           return (
-            <g
-              key={`blokje-${nok.id}`}
-              style={{ cursor: "pointer" }}
-              onClick={() => onBekijkNok(nok.id)}
-            >
-              <rect
-                x={bx} y={by}
-                width={BLOKJE_W} height={BLOKJE_H}
-                rx={BLOKJE_R}
-                fill="white"
-                stroke="#E5E7EB"
-                strokeWidth={1.5}
-              />
-              {/* Status dot */}
-              <circle
-                cx={bx + 12}
-                cy={nok.nokCenterY}
-                r={DOT_R}
-                fill={kleur}
-              />
-              {/* Titel */}
-              <text
-                x={bx + 22}
-                y={nok.nokCenterY + 1}
-                fontSize={10}
-                fill="#111827"
-                dominantBaseline="middle"
-                fontFamily="sans-serif"
-              >
-                {truncate(nok.titel, 14)}
+            <g key={`blokje-${nok.id}`} style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                if (!dragState.current.moved) { e.stopPropagation(); onBekijkNok(nok.id); }
+              }}>
+              <rect x={bx + 1} y={by + 2} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="#00000010" />
+              <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R}
+                fill="white" stroke="#E5E7EB" strokeWidth={1.5} />
+              <circle cx={bx + 13} cy={nok.nokCenterY} r={DOT_R} fill={kleur} />
+              <text x={bx + 24} y={nok.nokCenterY + 1} fontSize={10} fill="#111827"
+                dominantBaseline="middle" fontFamily="sans-serif">
+                {truncate(nok.titel, 13)}
               </text>
-              {/* Onzichtbaar klik-overlay */}
-              <rect
-                x={bx} y={by}
-                width={BLOKJE_W} height={BLOKJE_H}
-                rx={BLOKJE_R}
-                fill="transparent"
-              />
+              <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="transparent" />
             </g>
           );
         })}
