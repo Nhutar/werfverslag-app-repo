@@ -41,7 +41,7 @@ export function NokPuntenSectie({
   aanwezigen: AanwezigeData[];
   initieleVerantwoordelijke: string;
   verantwoordelijkeModus?: boolean;
-  kopInhoud: ReactNode;
+  kopInhoud?: ReactNode;
 }) {
   // Verantwoordelijken die effectief op punten voorkomen (naam, uniek)
   const verantwoordelijken = useMemo(() => {
@@ -255,7 +255,7 @@ export function NokPuntenSectie({
               Geen NOK-punten voor deze filter.
             </p>
           ) : (
-            <NokPuntenLijst punten={zichtbarePunten} verantwoordelijkeModus={verantwoordelijkeModus} />
+            <NokPuntenLijst punten={zichtbarePunten} verantwoordelijkeModus={verantwoordelijkeModus} verantwoordelijkeNaam={initieleNaam || undefined} />
           )}
         </div>
       )}

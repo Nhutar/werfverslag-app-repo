@@ -124,9 +124,11 @@ function NokPuntKaart({
 export function NokPuntenLijst({
   punten,
   verantwoordelijkeModus = false,
+  verantwoordelijkeNaam,
 }: {
   punten: NokPuntData[];
   verantwoordelijkeModus?: boolean;
+  verantwoordelijkeNaam?: string;
 }) {
   const router = useRouter();
   const [opgelostOpen, setOpgelostOpen] = useState(false);
@@ -187,7 +189,7 @@ export function NokPuntenLijst({
       </div>
 
       {teBekijken && (
-        <BekijkNokPuntModaal punt={teBekijken} verantwoordelijkeModus={verantwoordelijkeModus} onSluit={() => setTeBekijken(null)} />
+        <BekijkNokPuntModaal punt={teBekijken} verantwoordelijkeModus={verantwoordelijkeModus} verantwoordelijkeNaam={verantwoordelijkeNaam} onSluit={() => setTeBekijken(null)} />
       )}
 
       {teVerwijderen && (
