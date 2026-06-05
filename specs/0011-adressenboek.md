@@ -2,7 +2,7 @@
 id: "0011"
 title: Adressenboek
 slug: adressenboek
-status: queued
+status: deployed
 ---
 
 ## Doel
