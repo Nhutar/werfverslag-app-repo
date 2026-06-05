@@ -16,8 +16,8 @@ export async function POST(
   if (!punt) {
     return NextResponse.json({ error: "Niet gevonden" }, { status: 404 });
   }
-  if (punt.status === "opgelost") {
-    return NextResponse.json({ error: "Al opgelost" }, { status: 400 });
+  if (punt.status === "opgelost" || punt.status === "wacht-op-goedkeuring") {
+    return NextResponse.json({ error: "Al ingediend of opgelost" }, { status: 400 });
   }
 
   let formData: FormData;
@@ -61,11 +61,13 @@ export async function POST(
   await prisma.nokPunt.update({
     where: { id: params.id },
     data: {
-      status: "opgelost",
+      status: "wacht-op-goedkeuring",
       opgelostOp: new Date(),
       opgelostDoorNaam,
       oplossingOmschrijving: oplossingOmschrijving || null,
       oplossingFotoUrl,
+      afkeuringsReden: null,
+      afgekeurdOp: null,
     },
   });
 

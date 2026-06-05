@@ -4,6 +4,7 @@ const VOLGORDE: NokStatus[] = [
   "voorbij-deadline",
   "bijna-deadline",
   "open",
+  "wacht-op-goedkeuring",
   "opgelost",
 ];
 

@@ -21,6 +21,8 @@ export interface NokPuntData {
   opgelostDoorNaam: string | null;
   oplossingOmschrijving: string | null;
   oplossingFotoUrl: string | null;
+  afkeuringsReden: string | null;
+  afgekeurdOp: string | null;
   fotoUrls: string[];
   verslagId: string;
 }
@@ -103,6 +105,12 @@ function NokPuntKaart({
           )}
         </div>
       )}
+      {punt.status === "wacht-op-goedkeuring" && punt.opgelostOp && (
+        <p className="text-xs text-blue-600 mt-2">
+          Oplossing ingediend op {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}
+          {punt.opgelostDoorNaam && ` door ${punt.opgelostDoorNaam}`} — wacht op goedkeuring
+        </p>
+      )}
       {punt.status === "opgelost" && punt.opgelostOp && (
         <p className="text-xs text-green-600 mt-2">
           Opgelost op {new Date(punt.opgelostOp).toLocaleDateString("nl-BE")}
@@ -179,7 +187,7 @@ export function NokPuntenLijst({
       </div>
 
       {teBekijken && (
-        <BekijkNokPuntModaal punt={teBekijken} onSluit={() => setTeBekijken(null)} />
+        <BekijkNokPuntModaal punt={teBekijken} verantwoordelijkeModus={verantwoordelijkeModus} onSluit={() => setTeBekijken(null)} />
       )}
 
       {teVerwijderen && (

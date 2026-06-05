@@ -71,6 +71,8 @@ model NokPunt {
   opgelostOp              DateTime?        @map("opgelost_op")
   oplossingOmschrijving   String?          @map("oplossing_omschrijving")
   oplossingFotoUrl        String?          @map("oplossing_foto_url")
+  afkeuringsReden         String?          @map("afkeurings_reden")
+  afgekeurdOp             DateTime?        @map("afgekeurd_op")
   aangemaaktOp            DateTime         @default(now()) @map("aangemaakt_op")
 
   @@map("nok_punt")
