@@ -2,7 +2,7 @@
 id: "0010"
 title: Goedkeuringsflow NOK-punten
 slug: goedkeuringsflow-nok-punten
-status: queued
+status: deployed
 ---
 
 ## Doel
