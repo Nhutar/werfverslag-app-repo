@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/StatusBadge";
 import { berekenStatus } from "@/lib/status";
-import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
 import { BekijkNokPuntModaal, NokPuntDetail } from "@/components/BekijkNokPuntModaal";
 
@@ -39,22 +38,6 @@ function NokPuntKaart({
   verantwoordelijkeModus: boolean;
 }) {
   const router = useRouter();
-
-  const menuOpties = verantwoordelijkeModus
-    ? [{ label: "Bekijk", onClick: () => onBekijk(punt) }]
-    : [
-        { label: "Bekijk", onClick: () => onBekijk(punt) },
-        {
-          label: "Aanpassen",
-          onClick: () =>
-            router.push(`/verslag/${punt.verslagId}/punt/${punt.id}/aanpassen`),
-        },
-        {
-          label: "Verwijderen",
-          onClick: () => onVerwijder(punt),
-          gevaarlijk: true,
-        },
-      ];
   const status = berekenStatus(new Date(punt.deadline), punt.status);
   const deadline = new Date(punt.deadline).toLocaleDateString("nl-BE", {
     day: "numeric",
@@ -63,7 +46,10 @@ function NokPuntKaart({
   });
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div
+      className="bg-white rounded-xl border border-gray-200 p-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all"
+      onClick={() => onBekijk(punt)}
+    >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <StatusBadge status={status} />
@@ -71,7 +57,24 @@ function NokPuntKaart({
             {punt.discipline}
           </span>
         </div>
-        <DrieKnopjesMenu opties={menuOpties} />
+        {!verantwoordelijkeModus && (
+          <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => router.push(`/verslag/${punt.verslagId}/punt/${punt.id}/aanpassen`)}
+              className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors text-sm"
+              title="Aanpassen"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => onVerwijder(punt)}
+              className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors text-sm"
+              title="Verwijderen"
+            >
+              🗑️
+            </button>
+          </div>
+        )}
       </div>
       <p className="text-sm font-medium text-gray-800 mb-2">
         {punt.titel || <span className="text-gray-400 italic">(geen titel)</span>}
@@ -87,7 +90,7 @@ function NokPuntKaart({
       </div>
       {/* Foto thumbnails */}
       {punt.fotoUrls.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-3">
+        <div className="flex flex-wrap gap-1.5 mt-3" onClick={(e) => e.stopPropagation()}>
           {punt.fotoUrls.slice(0, 3).map((url, i) => (
             <a key={i} href={url} target="_blank" rel="noopener noreferrer">
               {/* eslint-disable-next-line @next/next/no-img-element */}

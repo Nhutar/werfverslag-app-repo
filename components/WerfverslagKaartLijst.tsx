@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
 import { StatusTellers } from "@/components/StatusTellers";
 import { NokStatus } from "@/lib/status";
@@ -39,7 +38,7 @@ export function WerfverslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[]
               href={`/verslag/${verslag.id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
             >
-              <div className="pr-8">
+              <div className="pr-20">
                 <p className="font-semibold text-gray-900">Werfverslag van {verslag.datum}</p>
                 <p className="text-sm text-gray-500 mt-0.5">Verslaggever: {verslag.verslaggever}</p>
               </div>
@@ -52,13 +51,21 @@ export function WerfverslagKaartLijst({ verslagen }: { verslagen: VerslagKaart[]
               </div>
             </Link>
 
-            <div className="absolute top-4 right-4">
-              <DrieKnopjesMenu
-                opties={[
-                  { label: "Aanpassen", onClick: () => router.push(`/verslag/${verslag.id}/aanpassen`) },
-                  { label: "Verwijderen", onClick: () => setTeVerwijderen(verslag), gevaarlijk: true },
-                ]}
-              />
+            <div className="absolute top-4 right-4 flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => router.push(`/verslag/${verslag.id}/aanpassen`)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors text-sm"
+                title="Aanpassen"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={() => setTeVerwijderen(verslag)}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors text-sm"
+                title="Verwijderen"
+              >
+                🗑️
+              </button>
             </div>
           </div>
         ))}

@@ -169,8 +169,8 @@ export function NokPuntenSectie({
           </p>
         )}
 
-        {/* Filterbalk */}
-        {punten.length > 0 && (
+        {/* Filterbalk — enkel in lijstweergave */}
+        {weergave === "lijst" && punten.length > 0 && (
           <div className="flex gap-2 mt-3 flex-wrap items-center">
             <select
               value={filterVerantwoordelijke}

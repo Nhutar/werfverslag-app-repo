@@ -19,7 +19,7 @@ export async function POST(
 
   await prisma.nokPunt.update({
     where: { id: params.id },
-    data: { status: "opgelost" },
+    data: { status: "opgelost", aanvaardOp: new Date() },
   });
 
   return NextResponse.json({ ok: true });

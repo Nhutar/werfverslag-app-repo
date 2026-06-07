@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
-import { DrieKnopjesMenu } from "@/components/DrieKnopjesMenu";
 import { BevestigingDialog } from "@/components/BevestigingDialog";
 import { StatusTellers } from "@/components/StatusTellers";
 import { NokStatus } from "@/lib/status";
@@ -40,7 +39,7 @@ export function ProjectKaartLijst({ projecten }: { projecten: ProjectKaart[] }) 
               href={`/project/${project.id}`}
               className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all"
             >
-              <div className="pr-8">
+              <div className="pr-20">
                 <p className="font-semibold text-gray-900 truncate">{project.naam}</p>
                 <p className="text-sm text-gray-500 mt-0.5">{project.werfadres}</p>
                 {project.bouwheer && (
@@ -61,13 +60,21 @@ export function ProjectKaartLijst({ projecten }: { projecten: ProjectKaart[] }) 
               </div>
             </Link>
 
-            <div className="absolute top-4 right-4">
-              <DrieKnopjesMenu
-                opties={[
-                  { label: "Aanpassen", onClick: () => router.push(`/project/${project.id}/aanpassen`) },
-                  { label: "Verwijderen", onClick: () => setTeVerwijderen(project), gevaarlijk: true },
-                ]}
-              />
+            <div className="absolute top-4 right-4 flex items-center gap-0.5">
+              <button
+                onClick={(e) => { e.preventDefault(); router.push(`/project/${project.id}/aanpassen`); }}
+                className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors text-sm"
+                title="Aanpassen"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); setTeVerwijderen(project); }}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors text-sm"
+                title="Verwijderen"
+              >
+                🗑️
+              </button>
             </div>
           </div>
         ))}
