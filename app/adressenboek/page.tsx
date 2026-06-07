@@ -13,7 +13,7 @@ export default async function AdressenboekPagina({
     orderBy: { naam: "asc" },
   });
 
-  const disciplines = Array.from(new Set(contacten.map((c) => c.discipline))).sort();
+  const disciplines = Array.from(new Set(contacten.map((c: { discipline: string }) => c.discipline))).sort();
   const filterDiscipline = searchParams.discipline ?? "";
 
   const zichtbaar = filterDiscipline
