@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdresboekVerwijderKnop } from "@/components/AdresboekVerwijderKnop";
+import type { AdresboekContact } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -13,11 +14,11 @@ export default async function AdressenboekPagina({
     orderBy: { naam: "asc" },
   });
 
-  const disciplines = Array.from(new Set(contacten.map((c: { discipline: string }) => c.discipline))).sort();
+  const disciplines = Array.from(new Set(contacten.map((c: AdresboekContact) => c.discipline))).sort();
   const filterDiscipline = searchParams.discipline ?? "";
 
   const zichtbaar = filterDiscipline
-    ? contacten.filter((c) => c.discipline === filterDiscipline)
+    ? contacten.filter((c: AdresboekContact) => c.discipline === filterDiscipline)
     : contacten;
 
   return (
