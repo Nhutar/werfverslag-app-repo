@@ -12,6 +12,13 @@ interface VerslagBasis {
   nokPunten: NokPuntData[];
 }
 
+interface VerslagDetail {
+  id: string;
+  verslaggever: string;
+  datum: string;
+  deelnemers: { id: string; naam: string; discipline: string; aanwezig: boolean }[];
+}
+
 interface Props {
   verslagen: VerslagBasis[];
   startdatum?: string | null;
@@ -31,6 +38,10 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
   const [filterDiscipline, setFilterDiscipline] = useState("alle");
   const [zoom, setZoom] = useState<ZoomNiveau>("week");
   const [teBekijken, setTeBekijken] = useState<NokPuntDetail | null>(null);
+
+  // Verslag-selectie voor Gantt
+  const [geselecteerdVerslagId, setGeselecteerdVerslagId] = useState<string | null>(null);
+  const [verslagModaal, setVerslagModaal] = useState<VerslagDetail | null>(null);
 
   const allePunten = useMemo(() => verslagen.flatMap((v) => v.nokPunten), [verslagen]);
 
@@ -56,16 +67,32 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
           }
           return true;
         })
-        // Stabiele volgorde op ID zodat boven/onder positie niet wijzigt na refresh
-        .sort((a, b) => a.id.localeCompare(b.id))
-        .map((p) => ({ id: p.id, titel: p.titel, deadline: p.deadline, status: p.status, verslagId: p.verslagId, verslagDatum: v.datum })),
+        .sort((a, b) => {
+          const d = a.discipline.localeCompare(b.discipline);
+          return d !== 0 ? d : a.id.localeCompare(b.id);
+        })
+        .map((p) => ({ id: p.id, titel: p.titel, discipline: p.discipline, deadline: p.deadline, status: p.status, verslagId: p.verslagId, verslagDatum: v.datum })),
     }));
   }, [verslagen, filterVerantwoordelijke, filterStatus, filterDiscipline]);
 
-  async function bekijkNok(nokId: string) {
+  async function bekijkNok(nokId: string, verslagId: string) {
+    // Altijd het bijhorende verslag selecteren + modaal openen
+    setGeselecteerdVerslagId(verslagId);
     const res = await fetch(`/api/nok-punten/${nokId}`);
     const data = await res.json();
     setTeBekijken(data as NokPuntDetail);
+  }
+
+  async function handleVerslagKlik(verslagId: string) {
+    if (geselecteerdVerslagId === verslagId) {
+      // Tweede klik op hetzelfde verslag: open verslagmodaal
+      const res = await fetch(`/api/verslagen/${verslagId}`);
+      const data = await res.json();
+      setVerslagModaal(data as VerslagDetail);
+    } else {
+      // Eerste klik: selecteer verslag
+      setGeselecteerdVerslagId(verslagId);
+    }
   }
 
   const filterActief = filterVerantwoordelijke !== "" || filterStatus !== "alle" || filterDiscipline !== "alle";
@@ -104,6 +131,16 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
                 Wissen
               </button>
             )}
+
+            {/* Selectie-badge */}
+            {geselecteerdVerslagId && (
+              <button
+                onClick={() => setGeselecteerdVerslagId(null)}
+                className="flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors"
+              >
+                Verslag geselecteerd ✕
+              </button>
+            )}
           </div>
 
           {/* Zoom knoppen */}
@@ -128,7 +165,10 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
         projectNaam={projectNaam}
         zoom={zoom}
         verslaggeVerModus={!verantwoordelijkeModus}
+        geselecteerdVerslagId={geselecteerdVerslagId}
         onBekijkNok={bekijkNok}
+        onVerslagKlik={handleVerslagKlik}
+        onDeselecteer={() => setGeselecteerdVerslagId(null)}
       />
 
       {teBekijken && (
@@ -137,6 +177,49 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
           verantwoordelijkeModus={verantwoordelijkeModus}
           onSluit={() => setTeBekijken(null)}
         />
+      )}
+
+      {/* Verslag-modaal */}
+      {verslagModaal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-8"
+          onClick={() => setVerslagModaal(null)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between p-5 border-b border-gray-100">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">
+                  Werfverslag van {new Date(verslagModaal.datum).toLocaleDateString("nl-BE", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
+                </h2>
+                <p className="text-sm text-gray-500 mt-0.5">Verslaggever: {verslagModaal.verslaggever}</p>
+              </div>
+              <button onClick={() => setVerslagModaal(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+            </div>
+
+            <div className="p-5">
+              {verslagModaal.deelnemers.filter((d) => d.aanwezig).length > 0 ? (
+                <>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Aanwezigen</p>
+                  <div className="flex flex-col gap-1">
+                    {verslagModaal.deelnemers.filter((d) => d.aanwezig).map((d) => (
+                      <p key={d.id} className="text-sm text-gray-700">
+                        <span className="font-medium">{d.naam}</span>
+                        <span className="text-gray-400"> — {d.discipline}</span>
+                      </p>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-gray-400">Geen aanwezigen geregistreerd.</p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

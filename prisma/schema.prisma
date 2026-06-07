@@ -96,6 +96,7 @@ model NokPunt {
   oplossingFotoUrl        String?          @map("oplossing_foto_url")
   afkeuringsReden         String?          @map("afkeurings_reden")
   afgekeurdOp             DateTime?        @map("afgekeurd_op")
+  aanvaardOp              DateTime?        @map("aanvaard_op")
   aangemaaktOp            DateTime         @default(now()) @map("aangemaakt_op")
   opmerkingen             Opmerking[]
 

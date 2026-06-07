@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { berekenStatus, NokStatus } from "@/lib/status";
-import { ProjectKaartLijst } from "@/components/ProjectKaartLijst";
+import { ProjectFilter } from "@/components/ProjectFilter";
 import { StatusLegende } from "@/components/StatusLegende";
 
 export const dynamic = "force-dynamic";
@@ -82,7 +82,7 @@ export default async function HoofdDashboard() {
         </div>
       ) : (
         <>
-          <ProjectKaartLijst projecten={projectenData} />
+          <ProjectFilter projecten={projectenData} />
           <div className="mt-6 pt-4 border-t border-gray-200">
             <StatusLegende />
           </div>

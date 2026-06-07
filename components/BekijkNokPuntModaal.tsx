@@ -22,6 +22,7 @@ export interface NokPuntDetail {
   oplossingFotoUrl: string | null;
   afkeuringsReden: string | null;
   afgekeurdOp: string | null;
+  aanvaardOp: string | null;
   verslagId: string;
 }
 
@@ -132,8 +133,8 @@ export function BekijkNokPuntModaal({
     punt.status !== "opgelost" && punt.status !== "wacht-op-goedkeuring";
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-8">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 py-8" onClick={onSluit}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-gray-100">
           <div className="flex-1 pr-4">
@@ -220,7 +221,14 @@ export function BekijkNokPuntModaal({
                     </a>
                   )}
                   {punt.status === "opgelost" && (
-                    <p className="text-xs text-green-700 font-medium mt-2">✓ Aanvaard door verslaggever</p>
+                    <p className="text-xs text-green-700 font-medium mt-2">
+                      ✓ Aanvaard door verslaggever
+                      {punt.aanvaardOp && (
+                        <span className="font-normal text-green-600">
+                          {" "}op {new Date(punt.aanvaardOp).toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}
+                        </span>
+                      )}
+                    </p>
                   )}
                 </div>
               )}
