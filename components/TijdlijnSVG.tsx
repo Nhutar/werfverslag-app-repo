@@ -258,9 +258,9 @@ export function TijdlijnSVG({
   for (const { v, nok } of alleItems) {
     const verslagX = dateToX(parseDate(v.datum));
     const visueleDeadline = (sleepState?.nokId === nok.id) ? sleepState.deadline : nok.deadline;
-    const deadlineX = dateToX(parseDate(visueleDeadline));
-    const { level, richting } = vindNiveau(deadlineX);
-    geplaatst.push({ deadlineX, level, richting });
+    const stableDeadlineX = dateToX(parseDate(nok.deadline));
+    const { level, richting } = vindNiveau(stableDeadlineX);
+    geplaatst.push({ deadlineX: stableDeadlineX, level, richting });
     nokPlaatsingen.push({ nok, verslagX, verslagId: v.id, level, richting, visueleDeadline });
   }
 
