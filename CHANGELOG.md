@@ -5,6 +5,17 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.15.12] — 2026-06-08
+
+### Changed
+- Gantt: layer-gebaseerde rendering — elk werfverslag vormt een eigen SVG-layer (lijnen → blokjes → datumblokje). Oudste verslag achteraan, geselecteerde verslag vooraan. Niet-geselecteerde layers faden naar opacity 0.12 (#78)
+- Projectpagina: `items-start` op 2-kolommen grid zodat de opmerkingen-kaart niet mee omhoog trekt bij een lange deelnemerslijst (#78)
+
+### Fixed
+- Gantt: verbindingslijnen niet meer zichtbaar over NOK-blokjes door layer-structuur (#78)
+- Gantt: verbindingslijnen altijd donkergrijs, transparant bij andere selectie (#76)
+- Gantt: verbindingslijnen werden bedekt door witte achtergrond van andere NOK-blokjes (#77)
+
 ## [0.15.9] — 2026-06-08
 
 ### Fixed
