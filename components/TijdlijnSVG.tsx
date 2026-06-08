@@ -463,7 +463,9 @@ export function TijdlijnSVG({
             {truncate(projectNaam, 22)}
           </text>
 
-          {/* Per-verslag layers: oudste eerst (achtergrond), geselecteerde als laatste (voorgrond) */}
+          {/* Render-volgorde: lijnen → NOK-blokjes → verslag-datumblokjes
+              Verslag-datumblokjes liggen altijd bovenop alles → altijd klikbaar.
+              Geselecteerd verslag steeds als laatste binnen pass 2 en 3 → bovenaan. */}
           {(() => {
             const gesorteerd = [...verslagen].sort(
               (a, b) => parseDate(a.datum).getTime() - parseDate(b.datum).getTime()
@@ -475,99 +477,113 @@ export function TijdlijnSVG({
                 ]
               : gesorteerd;
 
-            return volgorde.map((v) => {
-              const verslagX = dateToX(parseDate(v.datum));
-              const isActief = geselecteerdVerslagId === v.id;
-              const isVaag = geselecteerdVerslagId != null && !isActief;
-              const layerNoks = nokItems.filter(n => n.verslagId === v.id);
+            return (
+              <>
+                {/* Pass 1 — alle verbindingslijnen (achtergrond) */}
+                {volgorde.map((v) => {
+                  const isVaag = geselecteerdVerslagId != null && geselecteerdVerslagId !== v.id;
+                  const layerNoks = nokItems.filter(n => n.verslagId === v.id);
+                  return (
+                    <g key={`lijnen-${v.id}`} opacity={isVaag ? 0.12 : 1}>
+                      {layerNoks.map((nok) => {
+                        const deadlineX = dateToX(parseDate(nok.visueleDeadline));
+                        const blokjeLinks = deadlineX - BLOKJE_W / 2;
+                        return (
+                          <path key={`lijn-${nok.id}`}
+                            d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
+                            fill="none" stroke="#6B7280" strokeWidth={1.5} />
+                        );
+                      })}
+                    </g>
+                  );
+                })}
 
-              return (
-                <g key={`layer-${v.id}`} opacity={isVaag ? 0.12 : 1}>
-
-                  {/* 1. Verbindingslijnen — achteraan in de layer */}
-                  {layerNoks.map((nok) => {
-                    const deadlineX = dateToX(parseDate(nok.visueleDeadline));
-                    const blokjeLinks = deadlineX - BLOKJE_W / 2;
-                    return (
-                      <path key={`lijn-${nok.id}`}
-                        d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
-                        fill="none" stroke="#6B7280" strokeWidth={1.5} />
-                    );
-                  })}
-
-                  {/* 2. NOK-blokjes — bovenop de lijnen */}
-                  {layerNoks.map((nok) => {
-                    const deadlineX = dateToX(parseDate(nok.visueleDeadline));
-                    const bx = deadlineX - BLOKJE_W / 2;
-                    const by = nok.nokCenterY - BLOKJE_H / 2;
-                    const kleur = statusKleur(berekenStatus(parseDate(nok.visueleDeadline), nok.status));
-                    const wordtGeslepen = sleepState?.nokId === nok.id;
-                    return (
-                      <g key={`blokje-${nok.id}`}
-                        style={{ cursor: "pointer" }}
-                        onMouseDown={(e) => {
-                          if (verslaggeVerModus) {
-                            e.stopPropagation();
-                            blokjeDrag.current = {
-                              nokId: nok.id,
-                              verslagId: nok.verslagId,
-                              verslagDatum: nok.verslagDatum,
-                              startClientX: e.clientX,
-                              origineleDeadline: nok.deadline,
-                              dragActief: false,
-                            };
-                          }
-                        }}
-                      >
-                        <rect x={bx + 1} y={by + 2} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="#00000010" />
-                        <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R}
-                          fill="white"
-                          stroke={wordtGeslepen ? "#3B82F6" : isActief ? "#1F2937" : "#E5E7EB"}
-                          strokeWidth={wordtGeslepen ? 2 : isActief ? 1.5 : 1} />
-                        <circle cx={bx + 13} cy={nok.nokCenterY} r={DOT_R} fill={kleur} />
-                        <text x={bx + 24} y={nok.nokCenterY - 4} fontSize={10} fill="#111827"
-                          dominantBaseline="middle" fontFamily="sans-serif">
-                          {truncate(nok.titel, 13)}
-                        </text>
-                        <text x={bx + 24} y={nok.nokCenterY + 9} fontSize={8} fill="#9CA3AF"
-                          dominantBaseline="middle" fontFamily="sans-serif">
-                          {truncate(nok.discipline, 16)}
-                        </text>
-                        {wordtGeslepen && (
-                          <g>
-                            <rect x={bx + BLOKJE_W / 2 - 28} y={by - 22} width={56} height={18} rx={4} fill="#1F2937" />
-                            <text x={bx + BLOKJE_W / 2} y={by - 10} fontSize={9} fill="white"
-                              textAnchor="middle" fontFamily="sans-serif" fontWeight="bold">
-                              {formatDag(parseDate(nok.visueleDeadline))}
+                {/* Pass 2 — alle NOK-blokjes (bovenop lijnen, geselecteerde verslag als laatste) */}
+                {volgorde.map((v) => {
+                  const isActief = geselecteerdVerslagId === v.id;
+                  const isVaag = geselecteerdVerslagId != null && !isActief;
+                  const layerNoks = nokItems.filter(n => n.verslagId === v.id);
+                  return (
+                    <g key={`blokjes-${v.id}`} opacity={isVaag ? 0.12 : 1}>
+                      {layerNoks.map((nok) => {
+                        const deadlineX = dateToX(parseDate(nok.visueleDeadline));
+                        const bx = deadlineX - BLOKJE_W / 2;
+                        const by = nok.nokCenterY - BLOKJE_H / 2;
+                        const kleur = statusKleur(berekenStatus(parseDate(nok.visueleDeadline), nok.status));
+                        const wordtGeslepen = sleepState?.nokId === nok.id;
+                        return (
+                          <g key={`blokje-${nok.id}`}
+                            style={{ cursor: "pointer" }}
+                            onMouseDown={(e) => {
+                              if (verslaggeVerModus) {
+                                e.stopPropagation();
+                                blokjeDrag.current = {
+                                  nokId: nok.id,
+                                  verslagId: nok.verslagId,
+                                  verslagDatum: nok.verslagDatum,
+                                  startClientX: e.clientX,
+                                  origineleDeadline: nok.deadline,
+                                  dragActief: false,
+                                };
+                              }
+                            }}
+                          >
+                            <rect x={bx + 1} y={by + 2} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="#00000010" />
+                            <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R}
+                              fill="white"
+                              stroke={wordtGeslepen ? "#3B82F6" : isActief ? "#1F2937" : "#E5E7EB"}
+                              strokeWidth={wordtGeslepen ? 2 : isActief ? 1.5 : 1} />
+                            <circle cx={bx + 13} cy={nok.nokCenterY} r={DOT_R} fill={kleur} />
+                            <text x={bx + 24} y={nok.nokCenterY - 4} fontSize={10} fill="#111827"
+                              dominantBaseline="middle" fontFamily="sans-serif">
+                              {truncate(nok.titel, 13)}
                             </text>
+                            <text x={bx + 24} y={nok.nokCenterY + 9} fontSize={8} fill="#9CA3AF"
+                              dominantBaseline="middle" fontFamily="sans-serif">
+                              {truncate(nok.discipline, 16)}
+                            </text>
+                            {wordtGeslepen && (
+                              <g>
+                                <rect x={bx + BLOKJE_W / 2 - 28} y={by - 22} width={56} height={18} rx={4} fill="#1F2937" />
+                                <text x={bx + BLOKJE_W / 2} y={by - 10} fontSize={9} fill="white"
+                                  textAnchor="middle" fontFamily="sans-serif" fontWeight="bold">
+                                  {formatDag(parseDate(nok.visueleDeadline))}
+                                </text>
+                              </g>
+                            )}
+                            <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="transparent" />
                           </g>
-                        )}
-                        <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="transparent" />
-                      </g>
-                    );
-                  })}
+                        );
+                      })}
+                    </g>
+                  );
+                })}
 
-                  {/* 3. Verslag-datumblokje — bovenaan in de layer */}
-                  <g style={{ cursor: "pointer" }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={() => onVerslagKlik?.(v.id)}
-                  >
-                    <rect x={verslagX - VERSLAG_W / 2} y={mainLineY - VERSLAG_H / 2}
-                      width={VERSLAG_W} height={VERSLAG_H} rx={VERSLAG_R}
-                      fill={isActief ? "#2563EB" : "white"}
-                      stroke={isActief ? "#2563EB" : "#1F2937"}
-                      strokeWidth={isActief ? 2 : 1.5} />
-                    <text x={verslagX} y={mainLineY + 1} fontSize={9}
-                      fill={isActief ? "white" : "#111827"}
-                      textAnchor="middle" dominantBaseline="middle"
-                      fontFamily="sans-serif" fontWeight="600">
-                      {formatDag(parseDate(v.datum))}
-                    </text>
-                  </g>
-
-                </g>
-              );
-            });
+                {/* Pass 3 — alle verslag-datumblokjes (altijd bovenop alles → altijd klikbaar) */}
+                {volgorde.map((v) => {
+                  const verslagX = dateToX(parseDate(v.datum));
+                  const isActief = geselecteerdVerslagId === v.id;
+                  return (
+                    <g key={`verslag-${v.id}`} style={{ cursor: "pointer" }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={() => onVerslagKlik?.(v.id)}
+                    >
+                      <rect x={verslagX - VERSLAG_W / 2} y={mainLineY - VERSLAG_H / 2}
+                        width={VERSLAG_W} height={VERSLAG_H} rx={VERSLAG_R}
+                        fill={isActief ? "#2563EB" : "white"}
+                        stroke={isActief ? "#2563EB" : "#1F2937"}
+                        strokeWidth={isActief ? 2 : 1.5} />
+                      <text x={verslagX} y={mainLineY + 1} fontSize={9}
+                        fill={isActief ? "white" : "#111827"}
+                        textAnchor="middle" dominantBaseline="middle"
+                        fontFamily="sans-serif" fontWeight="600">
+                        {formatDag(parseDate(v.datum))}
+                      </text>
+                    </g>
+                  );
+                })}
+              </>
+            );
           })()}
         </svg>
       </div>
