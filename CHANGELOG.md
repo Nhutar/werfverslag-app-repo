@@ -5,6 +5,12 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.15.13] — 2026-06-08
+
+### Fixed
+- Gantt: drie-passes rendering (lijnen → NOK-blokjes → verslag-datumblokjes) zodat lijnen van nieuwere verslagen nooit over NOK-blokjes van oudere verslagen liggen (#80)
+- Gantt: verslag-datumblokjes altijd bovenop alles → direct switchen van geselecteerd verslag zonder eerst te deselecteren (#80)
+
 ## [0.15.12] — 2026-06-08
 
 ### Changed
