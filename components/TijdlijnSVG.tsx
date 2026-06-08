@@ -21,7 +21,7 @@ export interface TijdlijnVerslagItem {
   nokPunten: TijdlijnNokItem[];
 }
 
-export type ZoomNiveau = "week" | "2weken" | "maand";
+export type ZoomNiveau = "7dagen" | "week" | "2weken" | "maand";
 
 interface Props {
   verslagen: TijdlijnVerslagItem[];
@@ -40,15 +40,16 @@ interface Props {
 // ─── Layout constanten ────────────────────────────────────────────────────────
 
 const ZOOM_PX_PER_DAG: Record<ZoomNiveau, number> = {
+  "7dagen": 80,
   week: 14,
   "2weken": 8,
   maand: 3,
 };
 
-const LEVEL_H = 55;
+const LEVEL_H = 42;
 const BLOKJE_W = 130;
-const BLOKJE_H = 32;
-const BLOKJE_R = 7;
+const BLOKJE_H = 26;
+const BLOKJE_R = 6;
 const LINKS_MARGE = 16;
 const RECHTS_MARGE = BLOKJE_W / 2 + 24;
 const TOP_PAD = 36;
