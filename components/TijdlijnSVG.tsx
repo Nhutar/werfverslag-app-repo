@@ -473,8 +473,8 @@ export function TijdlijnSVG({
               <path key={`lijn-${nok.id}`}
                 d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
                 fill="none"
-                stroke={isVaag ? "#F3F4F6" : isActiefVerslag ? "#1F2937" : "#9CA3AF"}
-                strokeWidth={isActiefVerslag ? 2 : 1.5} />
+                stroke={isVaag ? "#F3F4F6" : "#6B7280"}
+                strokeWidth={1.5} />
             );
           })}
 
