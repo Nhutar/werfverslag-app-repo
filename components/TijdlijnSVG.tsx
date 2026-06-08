@@ -30,6 +30,7 @@ interface Props {
   zoom: ZoomNiveau;
   verslaggeVerModus?: boolean;
   geselecteerdVerslagId?: string | null;
+  volledigScherm?: boolean;
   onBekijkNok: (nokId: string, verslagId: string) => void;
   onVerslagKlik?: (verslagId: string) => void;
   onDeselecteer?: () => void;
@@ -57,6 +58,7 @@ const VERSLAG_H = 24;
 const VERSLAG_R = 5;
 const DOT_R = 5;
 const VIEWPORT_H = 480;
+const VIEWPORT_H_FULLSCREEN = 700;
 
 // ─── Status kleuren ───────────────────────────────────────────────────────────
 
@@ -122,6 +124,7 @@ export function TijdlijnSVG({
   zoom,
   verslaggeVerModus = false,
   geselecteerdVerslagId,
+  volledigScherm = false,
   onBekijkNok,
   onVerslagKlik,
   onDeselecteer,
@@ -244,7 +247,8 @@ export function TijdlijnSVG({
   }
 
   const mainLineY = TOP_PAD + maxAbove * LEVEL_H;
-  const svgHoogte = Math.max(VIEWPORT_H, mainLineY + maxBelow * LEVEL_H + BOTTOM_PAD);
+  const viewportH = volledigScherm ? VIEWPORT_H_FULLSCREEN : VIEWPORT_H;
+  const svgHoogte = Math.max(viewportH, mainLineY + maxBelow * LEVEL_H + BOTTOM_PAD);
   const svgBreedte = LINKS_MARGE + totaleDagen * pxPerDag + RECHTS_MARGE;
 
   // Stap 3: bouw nokItems met Y-posities
@@ -408,7 +412,7 @@ export function TijdlijnSVG({
       <div
         ref={containerRef}
         className="relative rounded-xl border border-gray-200 bg-white overflow-hidden"
-        style={{ height: VIEWPORT_H, cursor: sleepState ? "ew-resize" : "grab", userSelect: "none" }}
+        style={{ height: viewportH, cursor: sleepState ? "ew-resize" : "grab", userSelect: "none", flex: volledigScherm ? "1" : undefined }}
         onMouseDown={onCanvasMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={onMouseUp}

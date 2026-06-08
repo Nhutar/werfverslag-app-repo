@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { TijdlijnSVG, TijdlijnVerslagItem, ZoomNiveau } from "@/components/TijdlijnSVG";
 import { BekijkNokPuntModaal, NokPuntDetail } from "@/components/BekijkNokPuntModaal";
 import { NokPuntData } from "@/components/NokPuntenLijst";
@@ -42,6 +42,8 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
   // Verslag-selectie voor Gantt
   const [geselecteerdVerslagId, setGeselecteerdVerslagId] = useState<string | null>(null);
   const [verslagModaal, setVerslagModaal] = useState<VerslagDetail | null>(null);
+  const [volledigScherm, setVolledigScherm] = useState(false);
+  const ganttRef = useRef<HTMLDivElement>(null);
 
   const allePunten = useMemo(() => verslagen.flatMap((v) => v.nokPunten), [verslagen]);
 
@@ -143,33 +145,57 @@ export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoord
             )}
           </div>
 
-          {/* Zoom knoppen */}
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-            {ZOOM_LABELS.map(({ waarde, label }) => (
-              <button
-                key={waarde}
-                type="button"
-                onClick={() => setZoom(waarde)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${zoom === waarde ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Zoom + fullscreen knoppen */}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
+              {ZOOM_LABELS.map(({ waarde, label }) => (
+                <button
+                  key={waarde}
+                  type="button"
+                  onClick={() => setZoom(waarde)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${zoom === waarde ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setVolledigScherm((v) => !v)}
+              className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors text-xs font-medium border border-gray-200"
+              title={volledigScherm ? "Volledig scherm sluiten" : "Volledig scherm"}
+            >
+              {volledigScherm ? "↙ Verkleinen" : "↗ Volledig scherm"}
+            </button>
           </div>
         </div>
       )}
 
-      <TijdlijnSVG
-        verslagen={gefilterd}
-        startdatum={startdatum}
-        projectNaam={projectNaam}
-        zoom={zoom}
-        verslaggeVerModus={!verantwoordelijkeModus}
-        geselecteerdVerslagId={geselecteerdVerslagId}
-        onBekijkNok={bekijkNok}
-        onVerslagKlik={handleVerslagKlik}
-        onDeselecteer={() => setGeselecteerdVerslagId(null)}
-      />
+      <div ref={ganttRef} className={volledigScherm ? "fixed inset-0 z-40 bg-white flex flex-col p-4 gap-3" : ""}>
+        {volledigScherm && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-700">{projectNaam} — Tijdlijn</span>
+            <button
+              onClick={() => setVolledigScherm(false)}
+              className="text-gray-400 hover:text-gray-700 text-xl leading-none"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        <TijdlijnSVG
+          verslagen={gefilterd}
+          startdatum={startdatum}
+          projectNaam={projectNaam}
+          zoom={zoom}
+          verslaggeVerModus={!verantwoordelijkeModus}
+          geselecteerdVerslagId={geselecteerdVerslagId}
+          onBekijkNok={bekijkNok}
+          onVerslagKlik={handleVerslagKlik}
+          onDeselecteer={() => setGeselecteerdVerslagId(null)}
+          volledigScherm={volledigScherm}
+        />
+      </div>
 
       {teBekijken && (
         <BekijkNokPuntModaal
