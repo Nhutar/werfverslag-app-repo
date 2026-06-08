@@ -318,7 +318,7 @@ export function TijdlijnSVG({
     e.preventDefault();
   }, [offset]);
 
-  const DRAG_DREMPEL_PX = 5;
+  const DRAG_DREMPEL_PX = 15;
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (blokjeDrag.current) {
@@ -473,7 +473,7 @@ export function TijdlijnSVG({
               <path key={`lijn-${nok.id}`}
                 d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
                 fill="none"
-                stroke={isVaag ? "#F3F4F6" : isActiefVerslag ? "#1F2937" : "#D1D5DB"}
+                stroke={isVaag ? "#F3F4F6" : isActiefVerslag ? "#1F2937" : "#9CA3AF"}
                 strokeWidth={isActiefVerslag ? 2 : 1.5} />
             );
           })}
