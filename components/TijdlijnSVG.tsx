@@ -12,7 +12,7 @@ export interface TijdlijnNokItem {
   discipline: string;
   deadline: string;
   status: string;
-  verslagDatum: string; // minimum voor deadline-drag
+  verslagDatum: string;
 }
 
 export interface TijdlijnVerslagItem {
@@ -21,7 +21,7 @@ export interface TijdlijnVerslagItem {
   nokPunten: TijdlijnNokItem[];
 }
 
-export type ZoomNiveau = "7dagen" | "week" | "2weken" | "maand";
+export type ZoomNiveau = "7dagen" | "maand" | "alles";
 
 interface Props {
   verslagen: TijdlijnVerslagItem[];
@@ -38,13 +38,6 @@ interface Props {
 }
 
 // ─── Layout constanten ────────────────────────────────────────────────────────
-
-const ZOOM_PX_PER_DAG: Record<ZoomNiveau, number> = {
-  "7dagen": 80,
-  week: 14,
-  "2weken": 8,
-  maand: 3,
-};
 
 const LEVEL_H = 42;
 const BLOKJE_W = 130;
@@ -133,8 +126,9 @@ export function TijdlijnSVG({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [containerBreedte, setContainerBreedte] = useState(1100);
+  const [pxPerDag, setPxPerDag] = useState(containerBreedte / 7);
 
-  // Canvas-pan drag state
   const canvasDrag = useRef({
     active: false, startX: 0, startY: 0,
     startOffX: 0, startOffY: 0, moved: false,
@@ -142,9 +136,6 @@ export function TijdlijnSVG({
 
   const router = useRouter();
 
-  // Blokje-drag state
-  // dragActief = false: muisknop ingedrukt maar nog niet genoeg bewogen (= potentiële klik)
-  // dragActief = true: drempelafstand overschreden, deadline wordt verschoven
   const blokjeDrag = useRef<{
     nokId: string;
     verslagId: string;
@@ -154,14 +145,8 @@ export function TijdlijnSVG({
     dragActief: boolean;
   } | null>(null);
 
-  const [sleepState, setSleepState] = useState<{
-    nokId: string;
-    deadline: string;
-  } | null>(null);
-
+  const [sleepState, setSleepState] = useState<{ nokId: string; deadline: string } | null>(null);
   const [foutMelding, setFoutMelding] = useState<string | null>(null);
-
-  const pxPerDag = ZOOM_PX_PER_DAG[zoom];
 
   // Tijdsbereik
   const heeftData = verslagen.length > 0;
@@ -193,9 +178,52 @@ export function TijdlijnSVG({
     return LINKS_MARGE + dagVerschil(beginDatum, d) * pxPerDag;
   }
 
+  // ── Container breedte meten + ResizeObserver ──────────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setContainerBreedte(el.clientWidth));
+    ro.observe(el);
+    setContainerBreedte(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  // ── Zoom-knop: stel pxPerDag in op basis van containerbreedte ────────────────
+  useEffect(() => {
+    const w = containerRef.current?.clientWidth ?? containerBreedte;
+    const nuttigeB = w - LINKS_MARGE - RECHTS_MARGE;
+    let px: number;
+    if (zoom === "7dagen") px = nuttigeB / 7;
+    else if (zoom === "maand") px = nuttigeB / 28;
+    else px = Math.max(0.5, nuttigeB / Math.max(totaleDagen, 1));
+    setPxPerDag(px);
+    // Centreer op vandaag
+    const vX = LINKS_MARGE + dagVerschil(beginDatum, vandaag) * px;
+    setOffset({ x: Math.min(0, w / 2 - vX), y: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoom, containerBreedte]);
+
+  // ── Muiswieltje: zoom in/uit richting muispositie ─────────────────────────────
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.15 : 0.87;
+      setPxPerDag(prev => Math.max(0.2, Math.min(500, prev * factor)));
+      // Zoom richting muispositie
+      const rect = el.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      setOffset(prev => ({
+        x: (mouseX - LINKS_MARGE) * (1 - factor) + prev.x * factor,
+        y: 0,
+      }));
+    };
+    el.addEventListener("wheel", handler, { passive: false });
+    return () => el.removeEventListener("wheel", handler);
+  }, []);
+
   // ── Overlap-vrije niveauplaatsing ─────────────────────────────────────────────
-  // Stap 1: bereken deadlineX per NOK en wijs overlap-vrij een (level, richting) toe.
-  // Twee blokjes overlappen horizontaal als |deadlineX_a - deadlineX_b| < BLOKJE_W.
   type Plaatsing = { deadlineX: number; level: number; richting: number };
   const geplaatst: Plaatsing[] = [];
 
@@ -209,7 +237,7 @@ export function TijdlijnSVG({
         if (!conflict) return { level, richting };
       }
     }
-    return { level: 20, richting: -1 }; // noodgeval
+    return { level: 20, richting: -1 };
   }
 
   type NokPlaatsing = {
@@ -218,12 +246,9 @@ export function TijdlijnSVG({
   };
   const nokPlaatsingen: NokPlaatsing[] = [];
 
-  // Verzamel alle items globaal en sorteer op discipline → stabiele volgorde over verslagen heen
   const alleItems: { v: TijdlijnVerslagItem; nok: TijdlijnNokItem }[] = [];
   for (const v of verslagen) {
-    for (const nok of v.nokPunten) {
-      alleItems.push({ v, nok });
-    }
+    for (const nok of v.nokPunten) alleItems.push({ v, nok });
   }
   alleItems.sort((a, b) => {
     const d = a.nok.discipline.localeCompare(b.nok.discipline);
@@ -239,7 +264,6 @@ export function TijdlijnSVG({
     nokPlaatsingen.push({ nok, verslagX, verslagId: v.id, level, richting, visueleDeadline });
   }
 
-  // Stap 2: bepaal mainLineY op basis van werkelijk gebruikte niveaus
   let maxAbove = 0;
   let maxBelow = 0;
   for (const p of nokPlaatsingen) {
@@ -252,12 +276,9 @@ export function TijdlijnSVG({
   const svgHoogte = Math.max(viewportH, mainLineY + maxBelow * LEVEL_H + BOTTOM_PAD);
   const svgBreedte = LINKS_MARGE + totaleDagen * pxPerDag + RECHTS_MARGE;
 
-  // Stap 3: bouw nokItems met Y-posities
   type NokItem = TijdlijnNokItem & { verslagX: number; nokCenterY: number; visueleDeadline: string; verslagId: string };
   const nokItems: NokItem[] = nokPlaatsingen.map(({ nok, verslagX, verslagId, level, richting, visueleDeadline }) => ({
-    ...nok,
-    verslagX,
-    verslagId,
+    ...nok, verslagX, verslagId,
     nokCenterY: mainLineY + richting * level * LEVEL_H,
     visueleDeadline,
   }));
@@ -276,7 +297,8 @@ export function TijdlijnSVG({
       cur.setMonth(cur.getMonth() + 1);
     }
   }
-  if (zoom !== "maand") {
+  // Weeklijnen tonen als er voldoende ruimte is
+  if (pxPerDag > 2) {
     let cur = vorigeMaandag(new Date(beginDatum));
     while (cur <= eindDatum) {
       const x = dateToX(cur);
@@ -290,30 +312,21 @@ export function TijdlijnSVG({
 
   const onCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     canvasDrag.current = {
-      active: true,
-      startX: e.clientX,
-      startY: e.clientY,
-      startOffX: offset.x,
-      startOffY: offset.y,
-      moved: false,
+      active: true, startX: e.clientX, startY: e.clientY,
+      startOffX: offset.x, startOffY: offset.y, moved: false,
     };
     e.preventDefault();
   }, [offset]);
 
-  const DRAG_DREMPEL_PX = 5; // minimale beweging voor drag-activatie
+  const DRAG_DREMPEL_PX = 5;
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
-    // Blokje-drag: drempel bewaken of deadline bijwerken
     if (blokjeDrag.current) {
       const dx = e.clientX - blokjeDrag.current.startClientX;
-
       if (!blokjeDrag.current.dragActief) {
-        // Drempel: pas starten als > 5px horizontaal bewogen
         if (Math.abs(dx) < DRAG_DREMPEL_PX) return;
         blokjeDrag.current.dragActief = true;
       }
-
-      // Deadline berekenen
       const dagsDelta = Math.round(dx / pxPerDag);
       let nieuweDeadline = addDagen(blokjeDrag.current.origineleDeadline, dagsDelta);
       if (nieuweDeadline < blokjeDrag.current.verslagDatum) {
@@ -322,39 +335,32 @@ export function TijdlijnSVG({
       setSleepState({ nokId: blokjeDrag.current.nokId, deadline: nieuweDeadline });
       return;
     }
-
     if (!canvasDrag.current.active) return;
     const dx = e.clientX - canvasDrag.current.startX;
     const dy = e.clientY - canvasDrag.current.startY;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) canvasDrag.current.moved = true;
     const containerW = containerRef.current?.clientWidth ?? 800;
     const minX = Math.min(0, containerW - svgBreedte);
-    const minY = Math.min(0, VIEWPORT_H - svgHoogte);
+    const minY = Math.min(0, viewportH - svgHoogte);
     setOffset({
       x: Math.max(minX, Math.min(0, canvasDrag.current.startOffX + dx)),
       y: Math.max(minY, Math.min(0, canvasDrag.current.startOffY + dy)),
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pxPerDag, svgBreedte, svgHoogte]);
+  }, [pxPerDag, svgBreedte, svgHoogte, viewportH]);
 
   const onMouseUp = useCallback(async () => {
     if (blokjeDrag.current) {
       const drag = blokjeDrag.current;
       blokjeDrag.current = null;
-
       if (!drag.dragActief) {
-        // Geen beweging = klik → open modaal
         setSleepState(null);
         onBekijkNok(drag.nokId, drag.verslagId);
         return;
       }
-
-      // Drag afgerond → sla deadline op
       const nieuweDeadline = sleepState?.deadline ?? drag.origineleDeadline;
       setSleepState(null);
-
-      if (nieuweDeadline === drag.origineleDeadline) return; // geen wijziging
-
+      if (nieuweDeadline === drag.origineleDeadline) return;
       try {
         const res = await fetch(`/api/nok-punten/${drag.nokId}`, {
           method: "PATCH",
@@ -374,24 +380,11 @@ export function TijdlijnSVG({
       }
       return;
     }
-    // Klik op lege canvas (geen drag, geen blokje) → deselecteer
-    // Enkel als de canvas-drag echt gestart was (active = true via onCanvasMouseDown)
     if (canvasDrag.current.active && !canvasDrag.current.moved) {
       onDeselecteer?.();
     }
     canvasDrag.current.active = false;
   }, [sleepState, onDeadlineWijzig, onBekijkNok, onDeselecteer, router]);
-
-  // Reset offset bij zoom-wissel
-  useEffect(() => {
-    const containerW = containerRef.current?.clientWidth ?? 800;
-    const vX = LINKS_MARGE + dagVerschil(beginDatum, vandaag) * ZOOM_PX_PER_DAG[zoom];
-    const gewensteX = Math.max(containerW - svgBreedte, Math.min(0, containerW / 2 - vX));
-    setOffset({ x: gewensteX, y: 0 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zoom]);
-
-  // ── Early return ─────────────────────────────────────────────────────────────
 
   if (!heeftData) {
     return (
@@ -400,8 +393,6 @@ export function TijdlijnSVG({
       </div>
     );
   }
-
-  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="relative">
@@ -472,14 +463,18 @@ export function TijdlijnSVG({
             {truncate(projectNaam, 22)}
           </text>
 
-          {/* Verbindingslijnen */}
+          {/* Verbindingslijnen — zwart als verslag geselecteerd */}
           {nokItems.map((nok) => {
             const deadlineX = dateToX(parseDate(nok.visueleDeadline));
             const blokjeLinks = deadlineX - BLOKJE_W / 2;
+            const isActiefVerslag = geselecteerdVerslagId === nok.verslagId;
+            const isVaag = geselecteerdVerslagId != null && !isActiefVerslag;
             return (
               <path key={`lijn-${nok.id}`}
                 d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
-                fill="none" stroke="#D1D5DB" strokeWidth={1.5} />
+                fill="none"
+                stroke={isVaag ? "#F3F4F6" : isActiefVerslag ? "#1F2937" : "#D1D5DB"}
+                strokeWidth={isActiefVerslag ? 2 : 1.5} />
             );
           })}
 
@@ -488,9 +483,7 @@ export function TijdlijnSVG({
             const x = dateToX(parseDate(v.datum));
             const isActief = geselecteerdVerslagId === v.id;
             return (
-              <g
-                key={v.id}
-                style={{ cursor: "pointer" }}
+              <g key={v.id} style={{ cursor: "pointer" }}
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => onVerslagKlik?.(v.id)}
               >
@@ -516,14 +509,14 @@ export function TijdlijnSVG({
             const by = nok.nokCenterY - BLOKJE_H / 2;
             const kleur = statusKleur(berekenStatus(parseDate(nok.visueleDeadline), nok.status));
             const wordtGeslepen = sleepState?.nokId === nok.id;
-            const isVaag = geselecteerdVerslagId != null && nok.verslagId !== geselecteerdVerslagId;
+            const isActiefVerslag = geselecteerdVerslagId === nok.verslagId;
+            const isVaag = geselecteerdVerslagId != null && !isActiefVerslag;
 
             return (
               <g key={`blokje-${nok.id}`}
-                style={{ cursor: "pointer", opacity: isVaag ? 0.2 : 1, transition: "opacity 0.15s" }}
+                style={{ cursor: "pointer", opacity: isVaag ? 0.15 : 1, transition: "opacity 0.15s" }}
                 onMouseDown={(e) => {
                   if (verslaggeVerModus) {
-                    // Onderschep canvas-pan, start potentiële blokje-drag
                     e.stopPropagation();
                     blokjeDrag.current = {
                       nokId: nok.id,
@@ -536,26 +529,20 @@ export function TijdlijnSVG({
                   }
                 }}
               >
-                {/* Schaduw */}
                 <rect x={bx + 1} y={by + 2} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="#00000010" />
-                {/* Blokje */}
                 <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R}
                   fill="white"
-                  stroke={wordtGeslepen ? "#3B82F6" : "#E5E7EB"}
-                  strokeWidth={wordtGeslepen ? 2 : 1.5} />
-                {/* Status dot */}
+                  stroke={wordtGeslepen ? "#3B82F6" : isActiefVerslag ? "#1F2937" : "#E5E7EB"}
+                  strokeWidth={wordtGeslepen ? 2 : isActiefVerslag ? 1.5 : 1} />
                 <circle cx={bx + 13} cy={nok.nokCenterY} r={DOT_R} fill={kleur} />
-                {/* Titel */}
                 <text x={bx + 24} y={nok.nokCenterY - 4} fontSize={10} fill="#111827"
                   dominantBaseline="middle" fontFamily="sans-serif">
                   {truncate(nok.titel, 13)}
                 </text>
-                {/* Discipline */}
                 <text x={bx + 24} y={nok.nokCenterY + 9} fontSize={8} fill="#9CA3AF"
                   dominantBaseline="middle" fontFamily="sans-serif">
                   {truncate(nok.discipline, 16)}
                 </text>
-                {/* Datum-tooltip tijdens slepen */}
                 {wordtGeslepen && (
                   <g>
                     <rect x={bx + BLOKJE_W / 2 - 28} y={by - 22} width={56} height={18} rx={4} fill="#1F2937" />
@@ -565,7 +552,6 @@ export function TijdlijnSVG({
                     </text>
                   </g>
                 )}
-                {/* Klik-overlay */}
                 <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="transparent" />
               </g>
             );

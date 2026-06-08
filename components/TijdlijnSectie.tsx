@@ -28,8 +28,8 @@ interface Props {
 
 const ZOOM_LABELS: { waarde: ZoomNiveau; label: string }[] = [
   { waarde: "7dagen", label: "7d" },
-  { waarde: "week", label: "Maand" },
-  { waarde: "maand", label: "Alles" },
+  { waarde: "maand", label: "Maand" },
+  { waarde: "alles", label: "Alles" },
 ];
 
 export function TijdlijnSectie({ verslagen, startdatum, projectNaam, verantwoordelijkeModus = false }: Props) {
