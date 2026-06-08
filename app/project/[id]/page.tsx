@@ -74,7 +74,7 @@ export default async function ProjectDashboard({
       </Link>
 
       {/* Bovenste sectie: 2 kolommen */}
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-5 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-5 mb-6 items-start">
         {/* Projectkaart */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-start justify-between gap-2">
