@@ -463,21 +463,6 @@ export function TijdlijnSVG({
             {truncate(projectNaam, 22)}
           </text>
 
-          {/* Verbindingslijnen — zwart als verslag geselecteerd */}
-          {nokItems.map((nok) => {
-            const deadlineX = dateToX(parseDate(nok.visueleDeadline));
-            const blokjeLinks = deadlineX - BLOKJE_W / 2;
-            const isActiefVerslag = geselecteerdVerslagId === nok.verslagId;
-            const isVaag = geselecteerdVerslagId != null && !isActiefVerslag;
-            return (
-              <path key={`lijn-${nok.id}`}
-                d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
-                fill="none"
-                stroke={isVaag ? "#F3F4F6" : "#6B7280"}
-                strokeWidth={1.5} />
-            );
-          })}
-
           {/* Verslagen */}
           {verslagen.map((v) => {
             const x = dateToX(parseDate(v.datum));
@@ -554,6 +539,21 @@ export function TijdlijnSVG({
                 )}
                 <rect x={bx} y={by} width={BLOKJE_W} height={BLOKJE_H} rx={BLOKJE_R} fill="transparent" />
               </g>
+            );
+          })}
+
+          {/* Verbindingslijnen — bovenop blokjes zodat ze nooit bedekt worden */}
+          {nokItems.map((nok) => {
+            const deadlineX = dateToX(parseDate(nok.visueleDeadline));
+            const blokjeLinks = deadlineX - BLOKJE_W / 2;
+            const isVaag = geselecteerdVerslagId != null && geselecteerdVerslagId !== nok.verslagId;
+            return (
+              <path key={`lijn-${nok.id}`}
+                d={`M ${nok.verslagX},${mainLineY} L ${nok.verslagX},${nok.nokCenterY} L ${blokjeLinks - 1},${nok.nokCenterY}`}
+                fill="none"
+                stroke={isVaag ? "#F3F4F6" : "#6B7280"}
+                strokeWidth={1.5}
+                style={{ pointerEvents: "none" }} />
             );
           })}
         </svg>
