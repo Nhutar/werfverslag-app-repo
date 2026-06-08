@@ -5,6 +5,26 @@ Type → bump: breaking→MAJOR, new-feature→MINOR, bug/refactoring/test→PAT
 
 ## [Unreleased]
 
+## [0.15.9] — 2026-06-08
+
+### Fixed
+- Gantt: discipline-volgorde blijft stabiel tijdens deadline-drag (niveauberekening op originele deadline) (#74)
+- Gantt: drag-drempel verhoogd van 5px naar 15px — voorkomt per ongeluk verslepen bij klik (#73)
+- Gantt: standaard verbindingslijnen donkerder (#9CA3AF i.p.v. #D1D5DB) zodat ze altijd zichtbaar zijn (#73)
+- TypeScript type errors op adressenboekpagina gefixed voor Vercel strict build (#67, #68, #69)
+- `prisma generate` toegevoegd aan Vercel build script (#69)
+- Aanvaardingsdatum correct getoond in historiek van NOK-punt (#66)
+
+### Changed
+- Gantt: muiswiel zoom richting muispositie, containerbreedte bepaalt standaard zoom (#72)
+- Gantt: volledig scherm modus (↗ knop), 7d/Maand/Alles zoomknoppen, weekas (#70, #71)
+- Gantt: klik op verslag = selecteer, tweede klik = modaal; NOK-klik selecteert bijhorend verslag (#72)
+- Gantt: verbindingslijnen zwart bij geselecteerd verslag, discipline-label op elk blokje (#72)
+- NOK-kaarten: ✏️ en 🗑️ icoontjes vervangen ··· menu; klik op kaart opent bekijk-modaal (#66)
+- Werfverslag- en projectkaarten: ✏️ en 🗑️ icoontjes; klik op backdrop sluit modals (#66)
+- Opmerkingen: verwijderknop (hover), "meer lezen" voor lange tekst, DELETE API (#66)
+- Hoofddashboard: zoekbalk (naam/adres/bouwheer) + filter (open/deadline/opgelost) (#66)
+
 ## [0.15.0] — 2026-06-05
 
 ### Added
